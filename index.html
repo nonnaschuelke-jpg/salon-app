@@ -263,6 +263,9 @@ html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font
 .apt-info { flex: 1; }
 .apt-client { font-size: 14px; font-weight: 600; }
 .apt-service { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.apt-item.completed { border-color: var(--green); background: var(--green-soft); }
+.apt-item.completed .apt-time { color: var(--green); }
+.apt-completed-badge { font-size: 10px; font-weight: 700; color: var(--green); background: var(--green-soft); border: 1px solid var(--green); padding: 1px 6px; border-radius: 6px; margin-left: 6px; }
 
 /* Settings list */
 .settings-item {
@@ -684,11 +687,11 @@ html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font
   </div>
 </div>
 
-<!-- Add Appointment Modal -->
+<!-- Add/Edit Appointment Modal -->
 <div class="modal-overlay" id="modalApt">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Новая запись</span>
+      <span class="modal-title" id="modalAptTitle">Новая запись</span>
       <button class="modal-close" onclick="closeModal('modalApt')" aria-label="Закрыть">✕</button>
     </div>
     <div class="form-group">
@@ -708,14 +711,67 @@ html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font
       <div id="aServicesContainer" class="chip-list"></div>
     </div>
     <div class="form-group">
+      <label class="form-label" for="aDuration">Длительность (мин)</label>
+      <input class="form-input" id="aDuration" type="number" placeholder="60">
+    </div>
+    <div class="form-group">
       <label class="form-label" for="aPrice">Цена (€)</label>
       <input class="form-input" id="aPrice" type="number" placeholder="0">
     </div>
+
+    <!-- Formula section (shown when editing/completing) -->
+    <div id="aFormulaSection" class="hidden">
+      <div style="background:var(--warm-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px">
+        <label class="form-label" style="color:var(--accent-dark);font-size:13px;margin-bottom:10px">🎨 Корень</label>
+        <div class="flex-between mb-8">
+          <label class="form-label" style="margin:0;font-size:10px">КРАСКА</label>
+          <button class="btn btn-sm btn-secondary" onclick="addZoneRow('aRoot')">+ Добавить</button>
+        </div>
+        <div id="aRootRows"></div>
+        <div class="form-group" style="margin-top:10px">
+          <label class="form-label" style="font-size:10px" for="aRootDev">АКТИВАТОР</label>
+          <input class="form-input" id="aRootDev" placeholder="напр. 6%, 9%" style="font-size:13px" maxlength="50">
+        </div>
+      </div>
+      <div style="background:var(--warm-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px">
+        <label class="form-label" style="color:var(--accent-dark);font-size:13px;margin-bottom:10px">✂️ Длина</label>
+        <div class="flex-between mb-8">
+          <label class="form-label" style="margin:0;font-size:10px">КРАСКА</label>
+          <button class="btn btn-sm btn-secondary" onclick="addZoneRow('aLength')">+ Добавить</button>
+        </div>
+        <div id="aLengthRows"></div>
+        <div class="form-group" style="margin-top:10px">
+          <label class="form-label" style="font-size:10px" for="aLengthDev">АКТИВАТОР</label>
+          <input class="form-input" id="aLengthDev" placeholder="напр. 6%, 9%" style="font-size:13px" maxlength="50">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="aTechnique">Техника</label>
+        <select class="form-select" id="aTechnique">
+          <option value="">— не выбрано —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="aFormulaDesc">Описание формулы</label>
+        <input class="form-input" id="aFormulaDesc" placeholder="напр. тёплый блонд, холодный шатен..." maxlength="200">
+      </div>
+    </div>
+
     <div class="form-group">
       <label class="form-label" for="aNotes">Заметки</label>
       <textarea class="form-textarea" id="aNotes" placeholder="Дополнительные заметки..." maxlength="2000"></textarea>
     </div>
-    <button class="btn btn-primary btn-full" onclick="saveAppointment()">Сохранить</button>
+
+    <div id="aButtonsNew">
+      <button class="btn btn-primary btn-full" onclick="saveAppointment()">Сохранить</button>
+    </div>
+    <div id="aButtonsEdit" class="hidden">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-full" onclick="saveAppointment()" style="flex:1">Сохранить</button>
+        <button class="btn btn-full" onclick="completeAppointment()" style="flex:1;background:var(--green);color:#fff">✓ Завершить</button>
+      </div>
+      <button class="btn btn-sm btn-secondary" onclick="toggleFormulaSection()" id="aFormulaToggle" style="width:100%;margin-top:8px">+ Добавить формулу</button>
+    </div>
   </div>
 </div>
 
@@ -1010,10 +1066,10 @@ function renderDashboard() {
   const d = new Date();
   document.getElementById('todayDate').textContent = d.getDate() + ' ' + MONTHS_RU[d.getMonth()];
 
-  // Stats — revenue from visits + past/today appointments (skip if visit already exists for same client+date)
+  // Stats — revenue from visits + completed appointments (no double-counting)
   const thisMonth = today.slice(0,7);
   const monthVisits = visits.filter(v => v.date && v.date.startsWith(thisMonth));
-  const monthAptsDone = appointments.filter(a => a.date && a.date.startsWith(thisMonth) && a.date <= today
+  const monthAptsDone = appointments.filter(a => a.completed && a.date && a.date.startsWith(thisMonth)
     && !visits.some(v => v.clientId === a.clientId && v.date === a.date));
   const revenue = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
     + monthAptsDone.reduce((s, a) => s + (Number(a.price) || 0), 0);
@@ -1031,11 +1087,13 @@ function renderDashboard() {
   } else {
     document.getElementById('todayApts').innerHTML = todayApts.map(a => {
       const cl = clients.find(c => c.id === a.clientId);
-      return `<div class="apt-item" onclick="openProfile('${esc(a.clientId)}')">
+      const done = a.completed;
+      return `<div class="apt-item${done ? ' completed' : ''}" onclick="openAptModal('${esc(a.id)}', true)">
         <div class="apt-time">${esc(a.time) || '—'}</div>
         <div class="apt-info">
-          <div class="apt-client">${cl ? esc(cl.name) : 'Неизвестный'}</div>
+          <div class="apt-client">${cl ? esc(cl.name) : 'Неизвестный'}${done ? '<span class="apt-completed-badge">✓</span>' : ''}</div>
           <div class="apt-service">${(a.services||[]).map(s => esc(s)).join(', ') || 'Не указано'}</div>
+          ${a.price ? '<div style="font-size:12px;font-weight:700;color:var(--green);margin-top:2px">' + formatPrice(a.price) + '</div>' : ''}
         </div>
       </div>`;
     }).join('');
@@ -1154,10 +1212,10 @@ function renderStats() {
     const ds = dateToStr(d);
     const dayVisits = visits.filter(v => v.date === ds);
     const dayApts = appointments.filter(a => a.date === ds);
-    // Revenue = visits + past/today appointments (skip if visit exists for same client+date)
-    const dayAptsUnique = ds <= today ? dayApts.filter(a => !dayVisits.some(v => v.clientId === a.clientId)) : [];
+    // Revenue = visits + completed appointments (no double-counting)
+    const dayAptsDone = dayApts.filter(a => a.completed && !dayVisits.some(v => v.clientId === a.clientId));
     const dayRevenue = dayVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
-      + dayAptsUnique.reduce((s, a) => s + (Number(a.price) || 0), 0);
+      + dayAptsDone.reduce((s, a) => s + (Number(a.price) || 0), 0);
 
     days.push({
       date: ds,
@@ -1180,7 +1238,7 @@ function renderStats() {
   // Also compute monthly totals for comparison (same dedup logic)
   const monthStr = today.slice(0, 7);
   const monthVisits = visits.filter(v => v.date && v.date.startsWith(monthStr));
-  const monthAptsDone = appointments.filter(a => a.date && a.date.startsWith(monthStr) && a.date <= today
+  const monthAptsDone = appointments.filter(a => a.completed && a.date && a.date.startsWith(monthStr)
     && !visits.some(v => v.clientId === a.clientId && v.date === a.date));
   const monthRevenue = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
     + monthAptsDone.reduce((s, a) => s + (Number(a.price) || 0), 0);
@@ -1761,32 +1819,182 @@ function saveVisit() {
 // APPOINTMENT MODAL
 // ═══════════════════════════════════════════════════
 
-function openAptModal(date) {
+let editingAptId = null;
+
+function openAptModal(dateOrId, isEdit) {
+  editingAptId = null;
   const sel = document.getElementById('aClient');
-  sel.innerHTML = clients.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
-  document.getElementById('aDate').value = date || todayStr();
-  document.getElementById('aTime').value = '';
-  document.getElementById('aPrice').value = '';
-  document.getElementById('aNotes').value = '';
-  renderServiceSelector('aServicesContainer', []);
+  const formulaSection = document.getElementById('aFormulaSection');
+  const btnNew = document.getElementById('aButtonsNew');
+  const btnEdit = document.getElementById('aButtonsEdit');
+
+  // Reset formula fields
+  document.getElementById('aRootRows').innerHTML = '';
+  document.getElementById('aLengthRows').innerHTML = '';
+  document.getElementById('aRootDev').value = '';
+  document.getElementById('aLengthDev').value = '';
+  document.getElementById('aFormulaDesc').value = '';
+  zoneRowCounters['aRoot'] = 0;
+  zoneRowCounters['aLength'] = 0;
+
+  if (isEdit) {
+    // Edit mode — load existing appointment
+    const apt = appointments.find(a => a.id === dateOrId);
+    if (!apt) return;
+    editingAptId = apt.id;
+    document.getElementById('modalAptTitle').textContent = apt.completed ? 'Завершённая запись' : 'Редактировать запись';
+    sel.innerHTML = clients.map(c => `<option value="${esc(c.id)}" ${c.id === apt.clientId ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+    document.getElementById('aDate').value = apt.date || '';
+    document.getElementById('aTime').value = apt.time || '';
+    document.getElementById('aDuration').value = apt.duration || '';
+    document.getElementById('aPrice').value = apt.price || '';
+    document.getElementById('aNotes').value = apt.notes || '';
+    renderServiceSelector('aServicesContainer', apt.services || []);
+
+    // Show formula section if data exists
+    const hasFormula = apt.formula && hasFormulaData(apt.formula);
+    formulaSection.classList.toggle('hidden', !hasFormula);
+    document.getElementById('aFormulaToggle').textContent = hasFormula ? '— Скрыть формулу' : '+ Добавить формулу';
+
+    if (hasFormula) {
+      if (apt.formula.root && apt.formula.root.colors.length) {
+        apt.formula.root.colors.forEach(c => addZoneRow('aRoot', c));
+      } else { addZoneRow('aRoot'); }
+      document.getElementById('aRootDev').value = (apt.formula.root && apt.formula.root.developer) || '';
+      if (apt.formula.length && apt.formula.length.colors.length) {
+        apt.formula.length.colors.forEach(c => addZoneRow('aLength', c));
+      } else { addZoneRow('aLength'); }
+      document.getElementById('aLengthDev').value = (apt.formula.length && apt.formula.length.developer) || '';
+    } else {
+      addZoneRow('aRoot');
+      addZoneRow('aLength');
+    }
+
+    renderTechniqueSelect('aTechnique');
+    if (apt.technique) document.getElementById('aTechnique').value = apt.technique;
+    document.getElementById('aFormulaDesc').value = apt.formulaDesc || '';
+
+    btnNew.classList.add('hidden');
+    btnEdit.classList.remove('hidden');
+  } else {
+    // Create mode
+    document.getElementById('modalAptTitle').textContent = 'Новая запись';
+    sel.innerHTML = clients.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+    document.getElementById('aDate').value = dateOrId || todayStr();
+    document.getElementById('aTime').value = '';
+    document.getElementById('aDuration').value = '';
+    document.getElementById('aPrice').value = '';
+    document.getElementById('aNotes').value = '';
+    renderServiceSelector('aServicesContainer', []);
+    formulaSection.classList.add('hidden');
+    addZoneRow('aRoot');
+    addZoneRow('aLength');
+    renderTechniqueSelect('aTechnique');
+    document.getElementById('aFormulaDesc').value = '';
+
+    btnNew.classList.remove('hidden');
+    btnEdit.classList.add('hidden');
+  }
+
   openModal('modalApt');
+}
+
+function toggleFormulaSection() {
+  const section = document.getElementById('aFormulaSection');
+  const btn = document.getElementById('aFormulaToggle');
+  const showing = section.classList.toggle('hidden');
+  btn.textContent = showing ? '+ Добавить формулу' : '— Скрыть формулу';
 }
 
 function saveAppointment() {
   const clientId = document.getElementById('aClient').value;
   if (!clientId) { alert('Выберите клиента'); return; }
-  appointments.push({
-    id: genId(),
+
+  const formulaSection = document.getElementById('aFormulaSection');
+  const hasFormulaVisible = !formulaSection.classList.contains('hidden');
+  const formula = hasFormulaVisible ? getFormulaData('aRoot', 'aLength') : null;
+  const technique = hasFormulaVisible ? document.getElementById('aTechnique').value : '';
+  const formulaDesc = hasFormulaVisible ? document.getElementById('aFormulaDesc').value.trim() : '';
+
+  const data = {
     clientId,
     date: document.getElementById('aDate').value || todayStr(),
     time: document.getElementById('aTime').value,
     services: getSelectedServices('aServicesContainer'),
+    duration: document.getElementById('aDuration').value,
     price: document.getElementById('aPrice').value,
-    notes: document.getElementById('aNotes').value.trim()
-  });
+    notes: document.getElementById('aNotes').value.trim(),
+    formula: formula,
+    technique: technique,
+    formulaDesc: formulaDesc
+  };
+
+  if (editingAptId) {
+    const idx = appointments.findIndex(a => a.id === editingAptId);
+    if (idx >= 0) Object.assign(appointments[idx], data);
+  } else {
+    appointments.push({ id: genId(), ...data, completed: false });
+  }
   persist();
   closeModal('modalApt');
   if (currentScreen === 'calendar') renderCalendar();
+  else if (currentScreen === 'profile') openProfile(clientId);
+  else renderDashboard();
+}
+
+function completeAppointment() {
+  const clientId = document.getElementById('aClient').value;
+  if (!clientId) { alert('Выберите клиента'); return; }
+
+  // Save all fields first
+  const formulaSection = document.getElementById('aFormulaSection');
+  const hasFormulaVisible = !formulaSection.classList.contains('hidden');
+  const formula = hasFormulaVisible ? getFormulaData('aRoot', 'aLength') : null;
+  const technique = hasFormulaVisible ? document.getElementById('aTechnique').value : '';
+  const formulaDesc = hasFormulaVisible ? document.getElementById('aFormulaDesc').value.trim() : '';
+
+  const data = {
+    clientId,
+    date: document.getElementById('aDate').value || todayStr(),
+    time: document.getElementById('aTime').value,
+    services: getSelectedServices('aServicesContainer'),
+    duration: document.getElementById('aDuration').value,
+    price: document.getElementById('aPrice').value,
+    notes: document.getElementById('aNotes').value.trim(),
+    formula: formula,
+    technique: technique,
+    formulaDesc: formulaDesc,
+    completed: true
+  };
+
+  if (editingAptId) {
+    const idx = appointments.findIndex(a => a.id === editingAptId);
+    if (idx >= 0) Object.assign(appointments[idx], data);
+  }
+
+  // Auto-add formula to repo if present
+  if (formula && hasFormulaData(formula)) {
+    // Remove old auto-synced entry for this appointment
+    formulaRepo = formulaRepo.filter(f => f.visitId !== editingAptId);
+    const client = clients.find(c => c.id === clientId);
+    formulaRepo.push({
+      id: genId(),
+      name: formulaDesc || (client ? client.name : '') + ' — ' + data.date,
+      technique,
+      formula,
+      notes: '',
+      clientId,
+      clientName: client ? client.name : '',
+      visitId: editingAptId,
+      date: data.date,
+      auto: true
+    });
+  }
+
+  persist();
+  closeModal('modalApt');
+  if (currentScreen === 'calendar') renderCalendar();
+  else if (currentScreen === 'profile') openProfile(clientId);
   else renderDashboard();
 }
 
@@ -1886,14 +2094,15 @@ function renderCalApts() {
   }
   document.getElementById('calApts').innerHTML = dayApts.map(a => {
     const cl = clients.find(c => c.id === a.clientId);
-    return `<div class="apt-item">
+    const done = a.completed;
+    return `<div class="apt-item${done ? ' completed' : ''}" onclick="openAptModal('${esc(a.id)}', true)">
       <div class="apt-time">${esc(a.time) || '—'}</div>
-      <div class="apt-info" onclick="openProfile('${esc(a.clientId)}')">
-        <div class="apt-client">${cl ? esc(cl.name) : 'Неизвестный'}</div>
+      <div class="apt-info">
+        <div class="apt-client">${cl ? esc(cl.name) : 'Неизвестный'}${done ? '<span class="apt-completed-badge">✓</span>' : ''}</div>
         <div class="apt-service">${(a.services||[]).map(s => esc(s)).join(', ') || ''}</div>
         ${a.price ? '<div style="font-size:12px;font-weight:700;color:var(--green);margin-top:2px">' + formatPrice(a.price) + '</div>' : ''}
       </div>
-      <button class="btn-delete-sm" onclick="deleteApt('${esc(a.id)}')" aria-label="Удалить запись" style="align-self:center">🗑</button>
+      <button class="btn-delete-sm" onclick="event.stopPropagation();deleteApt('${esc(a.id)}')" aria-label="Удалить запись" style="align-self:center">🗑</button>
     </div>`;
   }).join('') + `<div style="text-align:center;margin-top:8px"><button class="btn btn-sm btn-primary" onclick="openAptModal('${calSelected}')">+ Новая запись</button></div>`;
 }
