@@ -1071,13 +1071,15 @@ function renderDashboard() {
   const monthVisits = visits.filter(v => v.date && v.date.startsWith(thisMonth));
   const monthAptsDone = appointments.filter(a => a.completed && a.date && a.date.startsWith(thisMonth)
     && !visits.some(v => v.clientId === a.clientId && v.date === a.date));
-  const revenue = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
+  const monthAptsAll = appointments.filter(a => a.date && a.date.startsWith(thisMonth));
+  const actualRevenue = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
     + monthAptsDone.reduce((s, a) => s + (Number(a.price) || 0), 0);
+  const estimatedRevenue = monthAptsAll.reduce((s, a) => s + (Number(a.price) || 0), 0);
   document.getElementById('dashStats').innerHTML = `
     <div class="stat-card"><div class="stat-value">${clients.length}</div><div class="stat-label">Клиентов</div></div>
-    <div class="stat-card"><div class="stat-value">${monthVisits.length}</div><div class="stat-label">Визитов в этом месяце</div></div>
     <div class="stat-card"><div class="stat-value">${appointments.filter(a=>a.date===today).length}</div><div class="stat-label">Записей сегодня</div></div>
-    <div class="stat-card"><div class="stat-value">${revenue > 0 ? formatPrice(revenue) : '0 €'}</div><div class="stat-label">Доход за месяц</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${actualRevenue > 0 ? formatPrice(actualRevenue) : '0 €'}</div><div class="stat-label">Факт за месяц ✓</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--blue)">${estimatedRevenue > 0 ? formatPrice(estimatedRevenue) : '0 €'}</div><div class="stat-label">План за месяц</div></div>
   `;
 
   // Today appointments
@@ -1203,7 +1205,7 @@ function renderStats() {
 
   // Collect daily data for the week
   const days = [];
-  let weekRevenue = 0, weekVisits = 0, weekApts = 0;
+  let weekActual = 0, weekEstimated = 0, weekApts = 0;
   let maxRevenue = 0;
 
   for (let i = 0; i < 7; i++) {
@@ -1212,36 +1214,41 @@ function renderStats() {
     const ds = dateToStr(d);
     const dayVisits = visits.filter(v => v.date === ds);
     const dayApts = appointments.filter(a => a.date === ds);
-    // Revenue = visits + completed appointments (no double-counting)
+    // Actual = visits + completed appointments (no double-counting)
     const dayAptsDone = dayApts.filter(a => a.completed && !dayVisits.some(v => v.clientId === a.clientId));
-    const dayRevenue = dayVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
+    const dayActual = dayVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
       + dayAptsDone.reduce((s, a) => s + (Number(a.price) || 0), 0);
+    // Estimated = all appointment prices for the day
+    const dayEstimated = dayApts.reduce((s, a) => s + (Number(a.price) || 0), 0);
 
     days.push({
       date: ds,
       dayName: DAYS_RU_SHORT[i],
       dayNameFull: DAYS_RU_FULL[i],
       dateFormatted: d.getDate() + '.' + String(d.getMonth()+1).padStart(2,'0'),
-      visits: dayVisits.length,
       appointments: dayApts.length,
-      revenue: dayRevenue,
+      actual: dayActual,
+      estimated: dayEstimated,
       isToday: ds === today,
       isPast: ds < today
     });
 
-    weekRevenue += dayRevenue;
-    weekVisits += dayVisits.length;
+    weekActual += dayActual;
+    weekEstimated += dayEstimated;
     weekApts += dayApts.length;
-    if (dayRevenue > maxRevenue) maxRevenue = dayRevenue;
+    const dayMax = Math.max(dayActual, dayEstimated);
+    if (dayMax > maxRevenue) maxRevenue = dayMax;
   }
 
-  // Also compute monthly totals for comparison (same dedup logic)
+  // Monthly totals
   const monthStr = today.slice(0, 7);
   const monthVisits = visits.filter(v => v.date && v.date.startsWith(monthStr));
   const monthAptsDone = appointments.filter(a => a.completed && a.date && a.date.startsWith(monthStr)
     && !visits.some(v => v.clientId === a.clientId && v.date === a.date));
-  const monthRevenue = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
+  const monthAptsAll = appointments.filter(a => a.date && a.date.startsWith(monthStr));
+  const monthActual = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
     + monthAptsDone.reduce((s, a) => s + (Number(a.price) || 0), 0);
+  const monthEstimated = monthAptsAll.reduce((s, a) => s + (Number(a.price) || 0), 0);
 
   // Week label
   const weekLabel = formatDateShort(mondayStr) + ' — ' + formatDateShort(sundayStr);
@@ -1262,12 +1269,12 @@ function renderStats() {
   // Summary cards
   html += `<div class="week-summary">
     <div class="week-summary-card">
-      <div class="week-summary-value" style="color:var(--green)">${formatPrice(weekRevenue)}</div>
-      <div class="week-summary-label">Доход</div>
+      <div class="week-summary-value" style="color:var(--green)">${formatPrice(weekActual)}</div>
+      <div class="week-summary-label">Факт ✓</div>
     </div>
     <div class="week-summary-card">
-      <div class="week-summary-value">${weekVisits}</div>
-      <div class="week-summary-label">Визитов</div>
+      <div class="week-summary-value" style="color:var(--blue)">${formatPrice(weekEstimated)}</div>
+      <div class="week-summary-label">План</div>
     </div>
     <div class="week-summary-card">
       <div class="week-summary-value">${weekApts}</div>
@@ -1275,19 +1282,23 @@ function renderStats() {
     </div>
   </div>`;
 
-  // Revenue bar chart
+  // Revenue bar chart — dual bars: estimated (blue outline) and actual (green fill)
   html += '<div class="section-title">Доход по дням</div><div class="card" style="margin-bottom:16px">';
   days.forEach(day => {
-    const pct = maxRevenue > 0 ? (day.revenue / maxRevenue * 100) : 0;
-    const barColor = day.isToday ? 'visits' : 'revenue';
+    const estPct = maxRevenue > 0 ? (day.estimated / maxRevenue * 100) : 0;
+    const actPct = maxRevenue > 0 ? (day.actual / maxRevenue * 100) : 0;
+    const label = day.actual > 0 ? formatPrice(day.actual) : (day.estimated > 0 ? formatPrice(day.estimated) : '');
     html += `<div class="week-bar-row">
       <div class="week-bar-label">${day.dayName}</div>
       <div class="week-bar-track">
-        <div class="week-bar-fill ${barColor}" style="width:${Math.max(pct, 0)}%"></div>
-        <div class="week-bar-value">${day.revenue > 0 ? formatPrice(day.revenue) : ''}</div>
+        ${estPct > 0 ? '<div style="position:absolute;height:100%;width:' + estPct + '%;border-radius:8px;border:2px dashed var(--blue);opacity:0.4;box-sizing:border-box"></div>' : ''}
+        <div class="week-bar-fill revenue" style="width:${Math.max(actPct, 0)}%"></div>
+        <div class="week-bar-value">${label}</div>
       </div>
     </div>`;
   });
+  html += '<div style="display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11px;color:var(--text-muted)">' +
+    '<span>■ Факт</span><span style="border:1.5px dashed var(--blue);padding:0 6px;border-radius:4px;opacity:0.6">План</span></div>';
   html += '</div>';
 
   // Daily breakdown table
@@ -1298,17 +1309,19 @@ function renderStats() {
       <div class="week-day-name">${day.dayName}</div>
       <div class="week-day-date">${day.dateFormatted}</div>
       <div class="week-day-stats">
-        ${day.visits > 0 ? '<div class="week-day-chip" style="color:var(--accent)">👤 ' + day.visits + '</div>' : ''}
         ${day.appointments > 0 ? '<div class="week-day-chip" style="color:var(--blue)">📅 ' + day.appointments + '</div>' : ''}
-        ${day.revenue > 0 ? '<div class="week-day-chip" style="color:var(--green)">' + formatPrice(day.revenue) + '</div>' : '<div class="week-day-chip" style="color:var(--text-muted)">—</div>'}
+        ${day.actual > 0 ? '<div class="week-day-chip" style="color:var(--green)">✓ ' + formatPrice(day.actual) + '</div>' : ''}
+        ${day.estimated > 0 && day.estimated !== day.actual ? '<div class="week-day-chip" style="color:var(--text-muted)">план ' + formatPrice(day.estimated) + '</div>' : ''}
+        ${day.appointments === 0 && day.actual === 0 ? '<div class="week-day-chip" style="color:var(--text-muted)">—</div>' : ''}
       </div>
     </div>`;
   });
   html += '</div>';
 
-  // Average per visit
-  if (weekVisits > 0) {
-    const avg = Math.round(weekRevenue / weekVisits);
+  // Average per completed appointment
+  const totalCompleted = weekApts > 0 ? days.reduce((s, d) => s + d.appointments, 0) : 0;
+  if (weekActual > 0 && totalCompleted > 0) {
+    const avg = Math.round(weekActual / totalCompleted);
     html += `<div class="card mt-12" style="text-align:center">
       <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;margin-bottom:4px">Средний чек</div>
       <div style="font-size:28px;font-weight:800;color:var(--green)">${formatPrice(avg)}</div>
@@ -1318,8 +1331,9 @@ function renderStats() {
   // Monthly comparison
   html += `<div class="section-title mt-12">${MONTHS_RU_NOM[new Date().getMonth()]} — итого</div>
     <div class="card">
-      <div class="info-row"><span class="info-label">Визитов за месяц</span><span class="info-value">${monthVisits.length}</span></div>
-      <div class="info-row"><span class="info-label">Доход за месяц</span><span class="info-value" style="color:var(--green)">${formatPrice(monthRevenue)}</span></div>
+      <div class="info-row"><span class="info-label">Записей за месяц</span><span class="info-value">${monthAptsAll.length}</span></div>
+      <div class="info-row"><span class="info-label">Факт ✓</span><span class="info-value" style="color:var(--green)">${formatPrice(monthActual)}</span></div>
+      <div class="info-row"><span class="info-label">План</span><span class="info-value" style="color:var(--blue)">${formatPrice(monthEstimated)}</span></div>
       <div class="info-row" style="border:none"><span class="info-label">Клиентов всего</span><span class="info-value">${clients.length}</span></div>
     </div>`;
 
