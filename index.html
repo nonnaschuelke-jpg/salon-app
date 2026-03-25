@@ -306,6 +306,27 @@ html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font
 .info-label { font-size: 13px; color: var(--text-muted); }
 .info-value { font-size: 13px; font-weight: 600; overflow-wrap: break-word; word-break: break-word; max-width: 60%; text-align: right; }
 
+/* Weekly stats */
+.week-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.week-bar-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); min-width: 32px; text-align: right; }
+.week-bar-track { flex: 1; height: 28px; background: var(--border-light); border-radius: 8px; overflow: hidden; position: relative; }
+.week-bar-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; padding: 0 8px; min-width: 0; transition: width .4s ease; }
+.week-bar-fill.revenue { background: linear-gradient(90deg, var(--green-soft), var(--green)); }
+.week-bar-fill.visits { background: linear-gradient(90deg, var(--accent-soft), var(--accent)); }
+.week-bar-value { font-size: 11px; font-weight: 700; color: var(--text); white-space: nowrap; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
+.week-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.week-summary-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+.week-summary-value { font-size: 22px; font-weight: 800; }
+.week-summary-label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+.week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.week-nav-btn { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--accent); padding: 8px; }
+.week-nav-title { font-size: 14px; font-weight: 700; text-align: center; }
+.week-day-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+.week-day-name { font-size: 13px; font-weight: 600; min-width: 30px; }
+.week-day-date { font-size: 12px; color: var(--text-muted); min-width: 50px; }
+.week-day-stats { flex: 1; display: flex; justify-content: flex-end; gap: 12px; }
+.week-day-chip { font-size: 12px; font-weight: 600; }
+
 /* Delete button for cards */
 .btn-delete-sm { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--red); padding: 8px; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
 
@@ -342,6 +363,15 @@ html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font
 <div class="screen active" id="screen-home">
   <div class="stats" id="dashStats"></div>
 
+  <div class="settings-item" onclick="openStats()" style="margin-bottom:16px">
+    <div class="settings-icon" style="background:var(--green-soft);color:var(--green)">📊</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Статистика по неделям</div>
+      <div class="settings-item-desc">Доход, визиты, записи — по дням и неделям</div>
+    </div>
+    <span class="settings-arrow">›</span>
+  </div>
+
   <div class="flex-between mb-12">
     <div class="section-title" style="margin:0">Сегодня</div>
     <span style="font-size:13px;color:var(--text-muted);font-weight:600" id="todayDate"></span>
@@ -353,6 +383,14 @@ html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font
 
   <div class="section-title mt-12">Давно не были</div>
   <div id="overdueClients"></div>
+</div>
+
+<!-- Statistics (sub-screen from dashboard) -->
+<div class="screen" id="screen-stats">
+  <div style="margin-bottom:12px">
+    <button class="btn btn-sm btn-secondary" onclick="goBack()">← Назад</button>
+  </div>
+  <div id="statsContent"></div>
 </div>
 
 <!-- Clients -->
@@ -880,7 +918,8 @@ const SCREEN_SUBTITLES = {
   calendar: 'Календарь',
   settings: 'Настройки',
   profile: 'Профиль клиента',
-  'formula-detail': 'Детали формулы'
+  'formula-detail': 'Детали формулы',
+  stats: 'Статистика'
 };
 
 // Map sub-screens to their parent nav tab (M13)
@@ -891,7 +930,8 @@ const SCREEN_NAV_MAP = {
   calendar: 'calendar',
   settings: 'settings',
   profile: 'clients',
-  'formula-detail': 'formulas'
+  'formula-detail': 'formulas',
+  stats: 'home'
 };
 
 function showScreen(name, pushHistory) {
@@ -907,7 +947,7 @@ function showScreen(name, pushHistory) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.screen === navTarget));
 
   const fab = document.getElementById('fab');
-  fab.classList.toggle('hidden', name === 'settings' || name === 'profile' || name === 'formula-detail');
+  fab.classList.toggle('hidden', name === 'settings' || name === 'profile' || name === 'formula-detail' || name === 'stats');
 
   // Update header subtitle (L9)
   document.getElementById('headerSub').textContent = SCREEN_SUBTITLES[name] || 'Управление клиентами';
@@ -1056,6 +1096,169 @@ function renderDashboard() {
       </div>`;
     }).join('');
   }
+}
+
+// ═══════════════════════════════════════════════════
+// WEEKLY STATISTICS
+// ═══════════════════════════════════════════════════
+
+let statsWeekOffset = 0; // 0 = current week, -1 = last week, etc.
+
+const DAYS_RU_FULL = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+const DAYS_RU_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+function getWeekRange(offset) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let dow = today.getDay() - 1; // Monday=0
+  if (dow < 0) dow = 6;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - dow + (offset * 7));
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return { monday, sunday };
+}
+
+function dateToStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function openStats() {
+  statsWeekOffset = 0;
+  renderStats();
+  showScreen('stats');
+}
+
+function changeStatsWeek(dir) {
+  statsWeekOffset += dir;
+  renderStats();
+}
+
+function renderStats() {
+  const { monday, sunday } = getWeekRange(statsWeekOffset);
+  const mondayStr = dateToStr(monday);
+  const sundayStr = dateToStr(sunday);
+  const today = todayStr();
+
+  // Collect daily data for the week
+  const days = [];
+  let weekRevenue = 0, weekVisits = 0, weekApts = 0;
+  let maxRevenue = 0;
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const ds = dateToStr(d);
+    const dayVisits = visits.filter(v => v.date === ds);
+    const dayApts = appointments.filter(a => a.date === ds);
+    const dayRevenue = dayVisits.reduce((s, v) => s + (Number(v.price) || 0), 0);
+    const dayAptRevenue = dayApts.reduce((s, a) => s + (Number(a.price) || 0), 0);
+    const totalDayRevenue = dayRevenue + dayAptRevenue;
+
+    days.push({
+      date: ds,
+      dayName: DAYS_RU_SHORT[i],
+      dayNameFull: DAYS_RU_FULL[i],
+      dateFormatted: d.getDate() + '.' + String(d.getMonth()+1).padStart(2,'0'),
+      visits: dayVisits.length,
+      appointments: dayApts.length,
+      revenue: totalDayRevenue,
+      isToday: ds === today,
+      isPast: ds < today
+    });
+
+    weekRevenue += totalDayRevenue;
+    weekVisits += dayVisits.length;
+    weekApts += dayApts.length;
+    if (totalDayRevenue > maxRevenue) maxRevenue = totalDayRevenue;
+  }
+
+  // Also compute 4-week and monthly totals for comparison
+  const monthStr = today.slice(0, 7);
+  const monthVisits = visits.filter(v => v.date && v.date.startsWith(monthStr));
+  const monthRevenue = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0);
+
+  // Week label
+  const weekLabel = formatDateShort(mondayStr) + ' — ' + formatDateShort(sundayStr);
+  const isCurrentWeek = statsWeekOffset === 0;
+
+  let html = '';
+
+  // Week navigation
+  html += `<div class="week-nav">
+    <button class="week-nav-btn" onclick="changeStatsWeek(-1)" aria-label="Предыдущая неделя">‹</button>
+    <div>
+      <div class="week-nav-title">${isCurrentWeek ? 'Текущая неделя' : weekLabel}</div>
+      ${!isCurrentWeek ? '<div style="font-size:12px;color:var(--text-muted);text-align:center">' + weekLabel + '</div>' : ''}
+    </div>
+    <button class="week-nav-btn" onclick="changeStatsWeek(1)" aria-label="Следующая неделя"${statsWeekOffset >= 0 ? ' style="opacity:0.3;pointer-events:none"' : ''}>›</button>
+  </div>`;
+
+  // Summary cards
+  html += `<div class="week-summary">
+    <div class="week-summary-card">
+      <div class="week-summary-value" style="color:var(--green)">${formatPrice(weekRevenue)}</div>
+      <div class="week-summary-label">Доход</div>
+    </div>
+    <div class="week-summary-card">
+      <div class="week-summary-value">${weekVisits}</div>
+      <div class="week-summary-label">Визитов</div>
+    </div>
+    <div class="week-summary-card">
+      <div class="week-summary-value">${weekApts}</div>
+      <div class="week-summary-label">Записей</div>
+    </div>
+  </div>`;
+
+  // Revenue bar chart
+  html += '<div class="section-title">Доход по дням</div><div class="card" style="margin-bottom:16px">';
+  days.forEach(day => {
+    const pct = maxRevenue > 0 ? (day.revenue / maxRevenue * 100) : 0;
+    const barColor = day.isToday ? 'visits' : 'revenue';
+    html += `<div class="week-bar-row">
+      <div class="week-bar-label">${day.dayName}</div>
+      <div class="week-bar-track">
+        <div class="week-bar-fill ${barColor}" style="width:${Math.max(pct, 0)}%"></div>
+        <div class="week-bar-value">${day.revenue > 0 ? formatPrice(day.revenue) : ''}</div>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // Daily breakdown table
+  html += '<div class="section-title">По дням</div><div class="card">';
+  days.forEach(day => {
+    const highlight = day.isToday ? 'font-weight:700;color:var(--accent)' : (day.isPast ? '' : 'opacity:0.5');
+    html += `<div class="week-day-row" style="${highlight}">
+      <div class="week-day-name">${day.dayName}</div>
+      <div class="week-day-date">${day.dateFormatted}</div>
+      <div class="week-day-stats">
+        ${day.visits > 0 ? '<div class="week-day-chip" style="color:var(--accent)">👤 ' + day.visits + '</div>' : ''}
+        ${day.appointments > 0 ? '<div class="week-day-chip" style="color:var(--blue)">📅 ' + day.appointments + '</div>' : ''}
+        ${day.revenue > 0 ? '<div class="week-day-chip" style="color:var(--green)">' + formatPrice(day.revenue) + '</div>' : '<div class="week-day-chip" style="color:var(--text-muted)">—</div>'}
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // Average per visit
+  if (weekVisits > 0) {
+    const avg = Math.round(weekRevenue / weekVisits);
+    html += `<div class="card mt-12" style="text-align:center">
+      <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;margin-bottom:4px">Средний чек</div>
+      <div style="font-size:28px;font-weight:800;color:var(--green)">${formatPrice(avg)}</div>
+    </div>`;
+  }
+
+  // Monthly comparison
+  html += `<div class="section-title mt-12">${MONTHS_RU_NOM[new Date().getMonth()]} — итого</div>
+    <div class="card">
+      <div class="info-row"><span class="info-label">Визитов за месяц</span><span class="info-value">${monthVisits.length}</span></div>
+      <div class="info-row"><span class="info-label">Доход за месяц</span><span class="info-value" style="color:var(--green)">${formatPrice(monthRevenue)}</span></div>
+      <div class="info-row" style="border:none"><span class="info-label">Клиентов всего</span><span class="info-value">${clients.length}</span></div>
+    </div>`;
+
+  document.getElementById('statsContent').innerHTML = html;
 }
 
 // ═══════════════════════════════════════════════════
