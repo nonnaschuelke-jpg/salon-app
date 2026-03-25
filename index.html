@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#D6A4A4">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self';">
+<title>МойСалон</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root {
+  --accent: #D6A4A4;
+  --accent-dark: #c08a8a;
+  --accent-light: #E8CFCF;
+  --accent-soft: rgba(214,164,164,0.12);
+  --accent-bg: #fdf6f6;
+  --warm-50: #fefafa;
+  --blush: #E8CFCF;
+  --gold: #e5a100;
+  --gold-soft: rgba(229,161,0,0.08);
+  --green: #22c55e;
+  --green-soft: rgba(34,197,94,0.08);
+  --red: #ef4444;
+  --red-soft: rgba(239,68,68,0.07);
+  --blue: #3b82f6;
+  --blue-soft: rgba(59,130,246,0.07);
+  --purple: #8b5cf6;
+  --purple-soft: rgba(139,92,246,0.07);
+  --bg: #FAFAFA;
+  --bg-card: #FFFFFF;
+  --border: #ede4e4;
+  --border-light: #f5efef;
+  --text: #1A1A1A;
+  --text-secondary: #5c5c5c;
+  --text-muted: #999999;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --nav-h: 56px;
+  --header-h: 56px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+
+/* Header */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: calc(var(--header-h) + env(safe-area-inset-top));
+  background: var(--accent);
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 20px 12px;
+  padding-top: env(safe-area-inset-top);
+}
+.header-title { font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px; }
+.header-sub { font-size: 11px; color: rgba(255,255,255,0.75); font-weight: 500; }
+.header-action { background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+
+/* Bottom Nav */
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  height: var(--nav-h); background: #FFFFFF;
+  border-top: 1px solid var(--border);
+  display: flex; padding-bottom: 0;
+}
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .nav { padding-bottom: env(safe-area-inset-bottom); }
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; cursor: pointer; background: none; border: none; color: var(--text-muted);
+  transition: color .2s; padding: 4px 0;
+}
+.nav-btn.active { color: var(--accent-dark); }
+.nav-btn svg { width: 22px; height: 22px; }
+.nav-label { font-size: 11px; font-weight: 600; letter-spacing: 0.3px; color: inherit; }
+
+/* Screens */
+.screen {
+  position: fixed; top: calc(var(--header-h) + env(safe-area-inset-top)); left: 0; right: 0;
+  bottom: var(--nav-h); overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; display: none;
+  padding: 16px 16px 24px; background: var(--bg);
+}
+.screen.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  margin-bottom: 12px; box-shadow: var(--shadow-sm);
+}
+.card-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+
+/* Stat cards */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.stat-value { font-size: 26px; font-weight: 800; color: var(--text); }
+.stat-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-top: 2px; }
+
+/* Section titles */
+.section-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Client list */
+.client-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); margin-bottom: 8px;
+  cursor: pointer; transition: box-shadow .2s;
+}
+.client-item:active { box-shadow: var(--shadow-md); }
+.client-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-soft), var(--blush));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: var(--accent); flex-shrink: 0;
+}
+.client-info { flex: 1; min-width: 0; }
+.client-name { font-size: 15px; font-weight: 600; }
+.client-meta { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.client-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.tag {
+  font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 10px;
+  background: var(--accent-soft); color: var(--accent);
+}
+.tag.vip { background: var(--gold-soft); color: var(--gold); }
+.tag.color { background: var(--purple-soft); color: var(--purple); }
+
+/* Search */
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  margin-bottom: 14px;
+}
+.search-bar input {
+  flex: 1; border: none; outline: none; font-size: 15px;
+  background: transparent; color: var(--text);
+}
+.search-bar input::placeholder { color: var(--text-muted); }
+.search-bar svg { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 20px; border-radius: var(--radius-sm); border: none;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.btn-primary { background: linear-gradient(135deg, var(--accent-dark), var(--accent)); color: #fff; box-shadow: 0 4px 12px rgba(214,164,164,0.35); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-secondary { background: var(--accent-soft); color: var(--accent); }
+.btn-danger { background: var(--red-soft); color: var(--red); }
+.btn-sm { padding: 8px 14px; font-size: 13px; border-radius: var(--radius-sm); }
+.btn-full { width: 100%; }
+
+/* FAB */
+.fab {
+  position: fixed; bottom: calc(var(--nav-h) + 20px + env(safe-area-inset-bottom, 0px));
+  right: 20px; z-index: 90;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent);
+  color: #fff; border: none; font-size: 28px;
+  box-shadow: 0 6px 20px rgba(214,164,164,0.40);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: transform .2s;
+}
+.fab:active { transform: scale(0.9); }
+
+/* Modal / Overlay */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.4); display: none;
+  align-items: flex-end; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: #fff; border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 500px; max-height: 92vh;
+  overflow-y: auto; padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  animation: slideUp .3s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-title { font-size: 18px; font-weight: 800; }
+.modal-close { background: var(--accent-soft); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; color: var(--accent); display: flex; align-items: center; justify-content: center; }
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 12px 14px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 15px; color: var(--text);
+  background: var(--bg); outline: none; transition: border-color .2s;
+  font-family: inherit;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent-light); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+/* Formula row */
+.formula-row {
+  display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px;
+  padding: 10px; background: var(--warm-50); border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+.formula-row .form-group { margin-bottom: 0; flex: 1; min-width: 80px; }
+.formula-row .form-input { font-size: 13px; padding: 8px 10px; }
+.formula-remove { background: none; border: none; color: var(--red); cursor: pointer; font-size: 18px; padding: 8px; flex-shrink: 0; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+
+/* Visit card */
+.visit-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+}
+.visit-date { font-size: 12px; font-weight: 700; color: var(--accent); }
+.visit-services { font-size: 14px; font-weight: 600; margin-top: 4px; }
+.visit-formula { font-size: 12px; color: var(--text-secondary); margin-top: 6px; padding: 8px; background: var(--warm-50); border-radius: 8px; }
+.visit-formula-title { font-weight: 700; font-size: 11px; color: var(--accent); margin-bottom: 2px; }
+.visit-notes { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-style: italic; }
+.visit-price { font-size: 13px; font-weight: 700; color: var(--green); margin-top: 6px; }
+
+/* Calendar */
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 16px; }
+.cal-header { font-size: 11px; font-weight: 700; color: var(--text-muted); text-align: center; padding: 8px 0; }
+.cal-day {
+  min-height: 48px; display: flex; flex-direction: column; align-items: stretch;
+  font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer;
+  position: relative; padding: 3px;
+}
+.cal-day:hover { background: var(--accent-soft); }
+.cal-day.today .cal-day-num { font-weight: 800; color: var(--accent); }
+.cal-day.selected { background: var(--accent); color: #fff; }
+.cal-day.selected .cal-day-num { font-weight: 700; color: #fff; }
+.cal-day.selected .cal-apt-chip { background: rgba(255,255,255,0.25); color: #fff; }
+.cal-day.other-month { color: var(--text-muted); opacity: 0.4; }
+.cal-day-num { font-size: 13px; font-weight: 500; text-align: center; line-height: 1; margin-bottom: 2px; }
+.cal-apt-chip {
+  font-size: 9px; font-weight: 600; line-height: 1.1;
+  padding: 2px 3px; border-radius: 4px; margin-bottom: 1px;
+  background: var(--accent-soft); color: var(--accent-dark);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cal-apt-more { font-size: 8px; color: var(--text-muted); text-align: center; line-height: 1; }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-nav-btn { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--accent); padding: 8px; }
+.cal-month { font-size: 16px; font-weight: 700; }
+
+/* Appointment item */
+.apt-item {
+  display: flex; gap: 12px; padding: 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer;
+}
+.apt-time { font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap; min-width: 50px; }
+.apt-info { flex: 1; }
+.apt-client { font-size: 14px; font-weight: 600; }
+.apt-service { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+/* Settings list */
+.settings-item {
+  display: flex; align-items: center; gap: 12px; padding: 14px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer;
+}
+.settings-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.settings-item-text { flex: 1; }
+.settings-item-title { font-size: 15px; font-weight: 600; }
+.settings-item-desc { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.settings-arrow { color: var(--text-muted); font-size: 18px; }
+
+/* Chip list (for editing reference data) */
+.chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.chip {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 14px; background: var(--accent-soft);
+  border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--accent);
+  min-height: 36px;
+}
+.chip-remove { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 14px; padding: 4px; opacity: 0.6; min-width: 28px; min-height: 28px; display: flex; align-items: center; justify-content: center; }
+.chip-add-row { display: flex; gap: 8px; }
+.chip-add-row input { flex: 1; }
+
+/* Profile header */
+.profile-header { text-align: center; margin-bottom: 20px; }
+.profile-avatar {
+  width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 800; color: #fff;
+}
+.profile-name { font-size: 22px; font-weight: 800; }
+.profile-phone { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
+.profile-tags { display: flex; gap: 6px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+.profile-actions { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+
+/* Info rows */
+.info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+.info-label { font-size: 13px; color: var(--text-muted); }
+.info-value { font-size: 13px; font-weight: 600; overflow-wrap: break-word; word-break: break-word; max-width: 60%; text-align: right; }
+
+/* Delete button for cards */
+.btn-delete-sm { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--red); padding: 8px; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+
+/* Empty state */
+.empty { text-align: center; padding: 40px 20px; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-text { font-size: 15px; color: var(--text-muted); font-weight: 500; }
+
+/* Utility */
+.hidden { display: none !important; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.mt-12 { margin-top: 12px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div>
+    <div class="header-title">МойСалон</div>
+    <div class="header-sub" id="headerSub">Управление клиентами</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="header-action" onclick="showSearch()" aria-label="Поиск" title="Поиск">🔍</button>
+  </div>
+</div>
+
+<!-- ═══ SCREENS ═══ -->
+
+<!-- Dashboard -->
+<div class="screen active" id="screen-home">
+  <div class="stats" id="dashStats"></div>
+
+  <div class="flex-between mb-12">
+    <div class="section-title" style="margin:0">Сегодня</div>
+    <span style="font-size:13px;color:var(--text-muted);font-weight:600" id="todayDate"></span>
+  </div>
+  <div id="todayApts"></div>
+
+  <div class="section-title mt-12">Дни рождения скоро</div>
+  <div id="upcomingBirthdays"></div>
+
+  <div class="section-title mt-12">Давно не были</div>
+  <div id="overdueClients"></div>
+</div>
+
+<!-- Clients -->
+<div class="screen" id="screen-clients">
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" placeholder="Поиск клиентов..." id="clientSearch" oninput="renderClients()" maxlength="100">
+  </div>
+  <div id="clientList"></div>
+</div>
+
+<!-- Client Profile (sub-screen) -->
+<div class="screen" id="screen-profile">
+  <div style="margin-bottom:12px">
+    <button class="btn btn-sm btn-secondary" onclick="goBack()">← Назад</button>
+  </div>
+  <div id="profileContent"></div>
+</div>
+
+<!-- Calendar -->
+<div class="screen" id="screen-calendar">
+  <div class="card">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)" aria-label="Предыдущий месяц">‹</button>
+      <span class="cal-month" id="calMonth"></span>
+      <button class="cal-nav-btn" onclick="changeMonth(1)" aria-label="Следующий месяц">›</button>
+    </div>
+    <div class="calendar-grid" id="calGrid"></div>
+  </div>
+  <div class="flex-between mb-12 mt-12">
+    <div class="section-title" style="margin:0">Записи на выбранный день</div>
+  </div>
+  <div id="calApts"></div>
+</div>
+
+<!-- Settings -->
+<div class="screen" id="screen-settings">
+  <div class="section-title">Справочники</div>
+  <div class="settings-item" onclick="openRefEditor('services')">
+    <div class="settings-icon" style="background:var(--accent-soft);color:var(--accent)">✂️</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Услуги</div>
+      <div class="settings-item-desc">Стрижка, окрашивание, укладка...</div>
+    </div>
+    <span class="settings-arrow">›</span>
+  </div>
+  <div class="settings-item" onclick="openRefEditor('brands')">
+    <div class="settings-icon" style="background:var(--purple-soft);color:var(--purple)">🎨</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Бренды красок</div>
+      <div class="settings-item-desc">Estel, Wella, L'Oréal...</div>
+    </div>
+    <span class="settings-arrow">›</span>
+  </div>
+  <div class="settings-item" onclick="openRefEditor('techniques')">
+    <div class="settings-icon" style="background:var(--blue-soft);color:var(--blue)">💇</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Техники</div>
+      <div class="settings-item-desc">Аиртач, шатуш, балаяж...</div>
+    </div>
+    <span class="settings-arrow">›</span>
+  </div>
+  <div class="settings-item" onclick="openRefEditor('tags')">
+    <div class="settings-icon" style="background:var(--gold-soft);color:var(--gold)">🏷️</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Метки клиентов</div>
+      <div class="settings-item-desc">VIP, постоянный клиент...</div>
+    </div>
+    <span class="settings-arrow">›</span>
+  </div>
+
+  <div class="section-title mt-12">Данные</div>
+  <div class="settings-item" onclick="exportData()">
+    <div class="settings-icon" style="background:var(--green-soft);color:var(--green)">📤</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Экспорт данных</div>
+      <div class="settings-item-desc">Скачать все данные в JSON</div>
+    </div>
+    <span class="settings-arrow">›</span>
+  </div>
+  <div class="settings-item" onclick="document.getElementById('importFile').click()">
+    <div class="settings-icon" style="background:var(--blue-soft);color:var(--blue)">📥</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Импорт данных</div>
+      <div class="settings-item-desc">Восстановить из файла</div>
+    </div>
+    <span class="settings-arrow">›</span>
+  </div>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+
+  <div class="section-title mt-12">Импорт из CSV</div>
+  <div class="settings-item" onclick="document.getElementById('importClientsCSV').click()">
+    <div class="settings-icon" style="background:var(--accent-soft);color:var(--accent-dark)">👤</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Импорт клиентов (CSV)</div>
+      <div class="settings-item-desc">Имя, телефон, день рождения, метки</div>
+    </div>
+    <span class="settings-arrow">›</span>
+  </div>
+  <div class="settings-item" onclick="document.getElementById('importFormulasCSV').click()">
+    <div class="settings-icon" style="background:var(--purple-soft);color:var(--purple)">🧪</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Импорт формул (CSV)</div>
+      <div class="settings-item-desc">Клиент, формула, корень, длина</div>
+    </div>
+    <span class="settings-arrow">›</span>
+  </div>
+  <input type="file" id="importClientsCSV" accept=".csv" style="display:none" onchange="importClientsCSV(event)">
+  <input type="file" id="importFormulasCSV" accept=".csv" style="display:none" onchange="importFormulasCSV(event)">
+</div>
+
+<!-- Formulas Repository -->
+<div class="screen" id="screen-formulas">
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" placeholder="Поиск: тёплый блонд, балаяж, 7.0..." id="formulaSearch" oninput="renderFormulas()" maxlength="100">
+  </div>
+  <div id="formulaList"></div>
+</div>
+
+<!-- Formula Detail (sub-screen) -->
+<div class="screen" id="screen-formula-detail">
+  <div style="margin-bottom:12px">
+    <button class="btn btn-sm btn-secondary" onclick="goBack()">← Назад</button>
+  </div>
+  <div id="formulaDetailContent"></div>
+</div>
+
+<!-- ═══ FAB ═══ -->
+<button class="fab" id="fab" onclick="onFabClick()" aria-label="Добавить">+</button>
+
+<!-- ═══ BOTTOM NAV ═══ -->
+<nav class="nav">
+  <button class="nav-btn active" data-screen="home" onclick="showScreen('home')" aria-label="Главная">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span class="nav-label">Главная</span>
+  </button>
+  <button class="nav-btn" data-screen="clients" onclick="showScreen('clients')" aria-label="Клиенты">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    <span class="nav-label">Клиенты</span>
+  </button>
+  <button class="nav-btn" data-screen="formulas" onclick="showScreen('formulas')" aria-label="Формулы">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6l2 4H7l2-4z"/><path d="M7 7v10a2 2 0 002 2h6a2 2 0 002-2V7"/><line x1="12" y1="11" x2="12" y2="15"/><line x1="10" y1="13" x2="14" y2="13"/></svg>
+    <span class="nav-label">Формулы</span>
+  </button>
+  <button class="nav-btn" data-screen="calendar" onclick="showScreen('calendar')" aria-label="Календарь">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span class="nav-label">Календарь</span>
+  </button>
+  <button class="nav-btn" data-screen="settings" onclick="showScreen('settings')" aria-label="Настройки">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span class="nav-label">Настройки</span>
+  </button>
+</nav>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Quick Add Modal -->
+<div class="modal-overlay" id="modalQuickAdd">
+  <div class="modal" style="padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px))">
+    <div class="modal-header">
+      <span class="modal-title">Что добавить?</span>
+      <button class="modal-close" onclick="closeModal('modalQuickAdd')" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="settings-item" onclick="closeModal('modalQuickAdd');openClientModal()">
+      <div class="settings-icon" style="background:var(--accent-soft);color:var(--accent-dark)">👤</div>
+      <div class="settings-item-text">
+        <div class="settings-item-title">Новый клиент</div>
+        <div class="settings-item-desc">Добавить нового клиента</div>
+      </div>
+      <span class="settings-arrow">›</span>
+    </div>
+    <div class="settings-item" onclick="closeModal('modalQuickAdd');openAptModal()">
+      <div class="settings-icon" style="background:var(--blue-soft);color:var(--blue)">📅</div>
+      <div class="settings-item-text">
+        <div class="settings-item-title">Новая запись</div>
+        <div class="settings-item-desc">Записать клиента на приём</div>
+      </div>
+      <span class="settings-arrow">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Client Modal -->
+<div class="modal-overlay" id="modalClient">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalClientTitle">Новый клиент</span>
+      <button class="modal-close" onclick="closeModal('modalClient')" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="cName">Имя</label>
+      <input class="form-input" id="cName" placeholder="Имя Фамилия" maxlength="100">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="cPhone">Телефон</label>
+      <input class="form-input" id="cPhone" type="tel" placeholder="+382 6X XXX XXX" maxlength="20">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="cBirthday">День рождения</label>
+      <input class="form-input" id="cBirthday" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Метки</label>
+      <div id="cTagsContainer" class="chip-list"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="cNotes">Заметки</label>
+      <textarea class="form-textarea" id="cNotes" placeholder="Аллергии, предпочтения, заметки..." maxlength="2000"></textarea>
+    </div>
+
+    <div class="flex-between mb-8 mt-12">
+      <label class="form-label" style="margin:0">Формулы клиента</label>
+      <button class="btn btn-sm btn-secondary" onclick="addClientFormulaBlock()">+ Добавить</button>
+    </div>
+    <div id="cFormulasContainer"></div>
+
+    <button class="btn btn-primary btn-full mt-12" onclick="saveClient()">Сохранить</button>
+  </div>
+</div>
+
+<!-- Add Visit Modal -->
+<div class="modal-overlay" id="modalVisit">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Новый визит</span>
+      <button class="modal-close" onclick="closeModal('modalVisit')" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="vClient">Клиент</label>
+      <select class="form-select" id="vClient"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="vDate">Дата</label>
+      <input class="form-input" id="vDate" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Услуги</label>
+      <div id="vServicesContainer" class="chip-list"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="vDuration">Длительность (мин)</label>
+      <input class="form-input" id="vDuration" type="number" placeholder="60">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="vPrice">Цена (€)</label>
+      <input class="form-input" id="vPrice" type="number" placeholder="0">
+    </div>
+
+    <div style="background:var(--warm-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px">
+      <label class="form-label" style="color:var(--accent-dark);font-size:13px;margin-bottom:10px">🎨 Корень</label>
+      <div class="flex-between mb-8">
+        <label class="form-label" style="margin:0;font-size:10px">КРАСКА</label>
+        <button class="btn btn-sm btn-secondary" onclick="addZoneRow('vRoot')">+ Добавить</button>
+      </div>
+      <div id="vRootRows"></div>
+      <div class="form-group" style="margin-top:10px">
+        <label class="form-label" style="font-size:10px" for="vRootDev">АКТИВАТОР</label>
+        <input class="form-input" id="vRootDev" placeholder="напр. 6%, 9%" style="font-size:13px" maxlength="50">
+      </div>
+    </div>
+
+    <div style="background:var(--warm-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px">
+      <label class="form-label" style="color:var(--accent-dark);font-size:13px;margin-bottom:10px">✂️ Длина</label>
+      <div class="flex-between mb-8">
+        <label class="form-label" style="margin:0;font-size:10px">КРАСКА</label>
+        <button class="btn btn-sm btn-secondary" onclick="addZoneRow('vLength')">+ Добавить</button>
+      </div>
+      <div id="vLengthRows"></div>
+      <div class="form-group" style="margin-top:10px">
+        <label class="form-label" style="font-size:10px" for="vLengthDev">АКТИВАТОР</label>
+        <input class="form-input" id="vLengthDev" placeholder="напр. 6%, 9%" style="font-size:13px" maxlength="50">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="vTechnique">Техника</label>
+      <select class="form-select" id="vTechnique">
+        <option value="">— не выбрано —</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="vFormulaDesc">Описание формулы (для поиска)</label>
+      <input class="form-input" id="vFormulaDesc" placeholder="напр. тёплый блонд, холодный шатен, рыжий..." maxlength="200">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="vNotes">Заметки</label>
+      <textarea class="form-textarea" id="vNotes" placeholder="Дополнительные заметки..." maxlength="2000"></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveVisit()">Сохранить визит</button>
+  </div>
+</div>
+
+<!-- Add Appointment Modal -->
+<div class="modal-overlay" id="modalApt">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Новая запись</span>
+      <button class="modal-close" onclick="closeModal('modalApt')" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="aClient">Клиент</label>
+      <select class="form-select" id="aClient"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="aDate">Дата</label>
+      <input class="form-input" id="aDate" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="aTime">Время</label>
+      <input class="form-input" id="aTime" type="time">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Услуги</label>
+      <div id="aServicesContainer" class="chip-list"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="aPrice">Цена (€)</label>
+      <input class="form-input" id="aPrice" type="number" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="aNotes">Заметки</label>
+      <textarea class="form-textarea" id="aNotes" placeholder="Дополнительные заметки..." maxlength="2000"></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveAppointment()">Сохранить</button>
+  </div>
+</div>
+
+<!-- Reference Data Editor Modal -->
+<div class="modal-overlay" id="modalRef">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="refTitle">Редактирование</span>
+      <button class="modal-close" onclick="closeModal('modalRef')" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="chip-list" id="refChips"></div>
+    <div class="chip-add-row">
+      <input class="form-input" id="refNewItem" placeholder="Новый элемент..." maxlength="100">
+      <button class="btn btn-primary btn-sm" onclick="addRefItem()">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- Global Search Modal -->
+<div class="modal-overlay" id="modalSearch">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Поиск</span>
+      <button class="modal-close" onclick="closeModal('modalSearch')" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="search-bar" style="margin-bottom:16px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--text-muted)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" placeholder="Имя, телефон, формула..." id="globalSearch" oninput="doGlobalSearch()" maxlength="100">
+    </div>
+    <div id="globalResults"></div>
+  </div>
+</div>
+
+<!-- Add/Edit Formula Template Modal -->
+<div class="modal-overlay" id="modalFormula">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalFormulaTitle">Новая формула</span>
+      <button class="modal-close" onclick="closeModal('modalFormula')" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="ftName">Название / описание</label>
+      <input class="form-input" id="ftName" placeholder="напр. Тёплый блонд, Холодный шатен..." maxlength="200">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="ftTechnique">Техника</label>
+      <select class="form-select" id="ftTechnique">
+        <option value="">— не выбрано —</option>
+      </select>
+    </div>
+    <div style="background:var(--warm-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px">
+      <label class="form-label" style="color:var(--accent-dark);font-size:13px;margin-bottom:10px">🎨 Корень</label>
+      <div class="flex-between mb-8">
+        <label class="form-label" style="margin:0;font-size:10px">КРАСКА</label>
+        <button class="btn btn-sm btn-secondary" onclick="addZoneRow('ftRoot')">+ Добавить</button>
+      </div>
+      <div id="ftRootRows"></div>
+      <div class="form-group" style="margin-top:10px">
+        <label class="form-label" style="font-size:10px" for="ftRootDev">АКТИВАТОР</label>
+        <input class="form-input" id="ftRootDev" placeholder="напр. 6%, 9%" style="font-size:13px" maxlength="50">
+      </div>
+    </div>
+
+    <div style="background:var(--warm-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px">
+      <label class="form-label" style="color:var(--accent-dark);font-size:13px;margin-bottom:10px">✂️ Длина</label>
+      <div class="flex-between mb-8">
+        <label class="form-label" style="margin:0;font-size:10px">КРАСКА</label>
+        <button class="btn btn-sm btn-secondary" onclick="addZoneRow('ftLength')">+ Добавить</button>
+      </div>
+      <div id="ftLengthRows"></div>
+      <div class="form-group" style="margin-top:10px">
+        <label class="form-label" style="font-size:10px" for="ftLengthDev">АКТИВАТОР</label>
+        <input class="form-input" id="ftLengthDev" placeholder="напр. 6%, 9%" style="font-size:13px" maxlength="50">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="ftNotes">Заметки</label>
+      <textarea class="form-textarea" id="ftNotes" placeholder="Время выдержки, уход после, особенности нанесения..." maxlength="2000"></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveFormulaTemplate()">Сохранить</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════
+
+// HTML escape to prevent XSS (S1-S4)
+function esc(str) {
+  if (str == null) return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
+// Parse YYYY-MM-DD as local date (not UTC) to fix timezone bugs (B2)
+function parseLocalDate(dateStr) {
+  if (!dateStr) return new Date(NaN);
+  const parts = dateStr.split('-');
+  return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+}
+
+// Format date consistently as "25 марта 2026" (M11)
+function formatDate(dateStr) {
+  const d = parseLocalDate(dateStr);
+  if (isNaN(d.getTime())) return dateStr || '—';
+  return d.getDate() + ' ' + MONTHS_RU[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+// Format date without year as "25 марта"
+function formatDateShort(dateStr) {
+  const d = parseLocalDate(dateStr);
+  if (isNaN(d.getTime())) return dateStr || '—';
+  return d.getDate() + ' ' + MONTHS_RU[d.getMonth()];
+}
+
+// Format price consistently with space before € (M12)
+function formatPrice(price) {
+  const n = Number(price);
+  if (!n) return '0 €';
+  return n.toLocaleString('ru') + ' €';
+}
+
+// ═══════════════════════════════════════════════════
+// DATA LAYER
+// ═══════════════════════════════════════════════════
+
+const DEFAULTS = {
+  services: ['Стрижка','Окрашивание','Укладка','Мелирование','Кератин','Тонирование','Ботокс','Ламинирование','Наращивание','Химическая завивка'],
+  brands: ['Davines','Estel','Wella','L\'Oréal','Ollin','Kapous','Matrix','Schwarzkopf','Londa','Indola'],
+  techniques: ['Аиртач','Шатуш','Балаяж','Мелирование','Омбре','Сомбре','Тотал блонд','Растяжка цвета','Контуринг'],
+  tags: ['VIP','Постоянный клиент','Окрашивание','Новый клиент','Рекомендация']
+};
+
+function loadData(key, def) {
+  try { const d = localStorage.getItem('salon_' + key); return d ? JSON.parse(d) : def; } catch { return def; }
+}
+
+// localStorage error handling (M14)
+function saveData(key, val) {
+  try {
+    localStorage.setItem('salon_' + key, JSON.stringify(val));
+  } catch (e) {
+    console.error('Ошибка сохранения:', e);
+    alert('Не удалось сохранить данные. Хранилище может быть переполнено.');
+  }
+}
+
+let clients = loadData('clients', []);
+let visits = loadData('visits', []);
+let appointments = loadData('appointments', []);
+let formulaRepo = loadData('formulaRepo', []);
+let refs = {
+  services: loadData('ref_services', DEFAULTS.services),
+  brands: loadData('ref_brands', DEFAULTS.brands),
+  techniques: loadData('ref_techniques', DEFAULTS.techniques),
+  tags: loadData('ref_tags', DEFAULTS.tags)
+};
+
+function persist() {
+  saveData('clients', clients);
+  saveData('visits', visits);
+  saveData('appointments', appointments);
+  saveData('formulaRepo', formulaRepo);
+  saveData('ref_services', refs.services);
+  saveData('ref_brands', refs.brands);
+  saveData('ref_techniques', refs.techniques);
+  saveData('ref_tags', refs.tags);
+}
+
+// Use crypto for better IDs (L4)
+function genId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// Ensure Davines is first in brands — only fix once, don't persist unnecessarily (M17)
+if (!refs.brands.includes('Davines')) {
+  refs.brands.unshift('Davines');
+  saveData('ref_brands', refs.brands);
+} else if (refs.brands[0] !== 'Davines') {
+  refs.brands = refs.brands.filter(b => b !== 'Davines');
+  refs.brands.unshift('Davines');
+  saveData('ref_brands', refs.brands);
+}
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+
+let currentScreen = 'home';
+let screenHistory = [];
+
+const SCREEN_SUBTITLES = {
+  home: 'Управление клиентами',
+  clients: 'Клиенты',
+  formulas: 'Формулы',
+  calendar: 'Календарь',
+  settings: 'Настройки',
+  profile: 'Профиль клиента',
+  'formula-detail': 'Детали формулы'
+};
+
+// Map sub-screens to their parent nav tab (M13)
+const SCREEN_NAV_MAP = {
+  home: 'home',
+  clients: 'clients',
+  formulas: 'formulas',
+  calendar: 'calendar',
+  settings: 'settings',
+  profile: 'clients',
+  'formula-detail': 'formulas'
+};
+
+function showScreen(name, pushHistory) {
+  if (pushHistory !== false && currentScreen !== name) {
+    screenHistory.push(currentScreen);
+  }
+  currentScreen = name;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+
+  // Highlight correct nav tab including sub-screens (M13)
+  const navTarget = SCREEN_NAV_MAP[name] || name;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.screen === navTarget));
+
+  const fab = document.getElementById('fab');
+  fab.classList.toggle('hidden', name === 'settings' || name === 'profile' || name === 'formula-detail');
+
+  // Update header subtitle (L9)
+  document.getElementById('headerSub').textContent = SCREEN_SUBTITLES[name] || 'Управление клиентами';
+
+  // Push browser history state (U1)
+  if (pushHistory !== false) {
+    history.pushState({ screen: name }, '', '');
+  }
+
+  if (name === 'home') renderDashboard();
+  if (name === 'clients') renderClients();
+  if (name === 'calendar') renderCalendar();
+  if (name === 'formulas') renderFormulas();
+}
+
+// Browser back button support (U1)
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.screen) {
+    showScreen(e.state.screen, false);
+  } else if (screenHistory.length) {
+    showScreen(screenHistory.pop(), false);
+  } else {
+    showScreen('home', false);
+  }
+});
+
+function goBack() {
+  if (screenHistory.length) {
+    const prev = screenHistory.pop();
+    showScreen(prev, false);
+  } else {
+    history.back();
+  }
+}
+
+function onFabClick() {
+  if (currentScreen === 'home') openQuickAdd();
+  else if (currentScreen === 'clients') openClientModal();
+  else if (currentScreen === 'calendar') openAptModal();
+  else if (currentScreen === 'profile') openVisitModal(currentProfileId);
+  else if (currentScreen === 'formulas') openFormulaTemplateModal();
+}
+
+function openQuickAdd() {
+  openModal('modalQuickAdd');
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+
+const MONTHS_RU = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MONTHS_RU_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const DAYS_RU = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+function renderDashboard() {
+  const today = todayStr();
+  const d = new Date();
+  document.getElementById('todayDate').textContent = d.getDate() + ' ' + MONTHS_RU[d.getMonth()];
+
+  // Stats
+  const thisMonth = today.slice(0,7);
+  const monthVisits = visits.filter(v => v.date && v.date.startsWith(thisMonth));
+  const revenue = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0);
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${clients.length}</div><div class="stat-label">Клиентов</div></div>
+    <div class="stat-card"><div class="stat-value">${monthVisits.length}</div><div class="stat-label">Визитов в этом месяце</div></div>
+    <div class="stat-card"><div class="stat-value">${appointments.filter(a=>a.date===today).length}</div><div class="stat-label">Записей сегодня</div></div>
+    <div class="stat-card"><div class="stat-value">${revenue > 0 ? formatPrice(revenue) : '0 €'}</div><div class="stat-label">Доход за месяц</div></div>
+  `;
+
+  // Today appointments
+  const todayApts = appointments.filter(a => a.date === today).sort((a,b) => (a.time||'').localeCompare(b.time||''));
+  if (todayApts.length === 0) {
+    document.getElementById('todayApts').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Нет записей на сегодня</div></div>';
+  } else {
+    document.getElementById('todayApts').innerHTML = todayApts.map(a => {
+      const cl = clients.find(c => c.id === a.clientId);
+      return `<div class="apt-item" onclick="openProfile('${esc(a.clientId)}')">
+        <div class="apt-time">${esc(a.time) || '—'}</div>
+        <div class="apt-info">
+          <div class="apt-client">${cl ? esc(cl.name) : 'Неизвестный'}</div>
+          <div class="apt-service">${(a.services||[]).map(s => esc(s)).join(', ') || 'Не указано'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Birthdays — sorted by proximity (M2)
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const upcoming = clients.filter(c => {
+    if (!c.birthday) return false;
+    const bd = parseLocalDate(c.birthday);
+    if (isNaN(bd.getTime())) return false;
+    const thisYear = new Date(now.getFullYear(), bd.getMonth(), bd.getDate());
+    if (thisYear < todayStart) thisYear.setFullYear(thisYear.getFullYear() + 1);
+    const diff = (thisYear - todayStart) / 86400000;
+    return diff >= 0 && diff <= 30;
+  }).sort((a, b) => {
+    const bdA = parseLocalDate(a.birthday);
+    const bdB = parseLocalDate(b.birthday);
+    const yearA = new Date(now.getFullYear(), bdA.getMonth(), bdA.getDate());
+    const yearB = new Date(now.getFullYear(), bdB.getMonth(), bdB.getDate());
+    if (yearA < todayStart) yearA.setFullYear(yearA.getFullYear() + 1);
+    if (yearB < todayStart) yearB.setFullYear(yearB.getFullYear() + 1);
+    return yearA - yearB;
+  }).slice(0, 5);
+
+  if (upcoming.length === 0) {
+    document.getElementById('upcomingBirthdays').innerHTML = '<div class="empty"><div class="empty-icon">🎂</div><div class="empty-text">Нет ближайших дней рождения</div></div>';
+  } else {
+    document.getElementById('upcomingBirthdays').innerHTML = upcoming.map(c => {
+      return `<div class="client-item" onclick="openProfile('${esc(c.id)}')">
+        <div class="client-avatar">🎂</div>
+        <div class="client-info">
+          <div class="client-name">${esc(c.name)}</div>
+          <div class="client-meta">${formatDateShort(c.birthday)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Overdue — with null date safety (M6)
+  const overdue = clients.filter(c => {
+    const cv = visits.filter(v => v.clientId === c.id && v.date).sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+    if (cv.length === 0) return false;
+    const last = parseLocalDate(cv[0].date);
+    if (isNaN(last.getTime())) return false;
+    return (now - last) / 86400000 > 45;
+  }).slice(0, 5);
+  if (overdue.length === 0) {
+    document.getElementById('overdueClients').innerHTML = '<div class="empty"><div class="empty-icon">⏰</div><div class="empty-text">Все клиенты были недавно</div></div>';
+  } else {
+    document.getElementById('overdueClients').innerHTML = overdue.map(c => {
+      const cv = visits.filter(v => v.clientId === c.id && v.date).sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+      const days = Math.floor((now - parseLocalDate(cv[0].date)) / 86400000);
+      return `<div class="client-item" onclick="openProfile('${esc(c.id)}')">
+        <div class="client-avatar">${esc(c.name.charAt(0))}</div>
+        <div class="client-info">
+          <div class="client-name">${esc(c.name)}</div>
+          <div class="client-meta">${days} дн. назад</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// CLIENTS
+// ═══════════════════════════════════════════════════
+
+function renderClients() {
+  const q = (document.getElementById('clientSearch').value || '').toLowerCase();
+  const filtered = clients.filter(c => !q || c.name.toLowerCase().includes(q) || (c.phone||'').includes(q));
+  if (filtered.length === 0) {
+    document.getElementById('clientList').innerHTML = `<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">${clients.length === 0 ? 'Нет клиентов. Нажмите + чтобы добавить' : 'Ничего не найдено'}</div></div>`;
+    return;
+  }
+  document.getElementById('clientList').innerHTML = filtered.map(c => {
+    const vcount = visits.filter(v => v.clientId === c.id).length;
+    return `<div class="client-item" onclick="openProfile('${esc(c.id)}')">
+      <div class="client-avatar">${esc(c.name.charAt(0))}</div>
+      <div class="client-info">
+        <div class="client-name">${esc(c.name)}</div>
+        <div class="client-meta">${esc(c.phone) || 'Нет телефона'} · ${vcount} визит${pluralVisit(vcount)}</div>
+        ${(c.tags && c.tags.length) ? '<div class="client-tags">' + c.tags.map(t => `<span class="tag${t==='VIP'?' vip':''}">${esc(t)}</span>`).join('') + '</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function pluralVisit(n) {
+  if (n % 10 === 1 && n % 100 !== 11) return '';
+  if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'а';
+  return 'ов';
+}
+
+// ═══════════════════════════════════════════════════
+// CLIENT PROFILE
+// ═══════════════════════════════════════════════════
+
+let currentProfileId = null;
+
+function openProfile(id) {
+  currentProfileId = id;
+  const c = clients.find(cl => cl.id === id);
+  if (!c) return;
+  const cv = visits.filter(v => v.clientId === id).sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+
+  let html = `
+    <div class="profile-header">
+      <div class="profile-avatar">${esc(c.name.charAt(0))}</div>
+      <div class="profile-name">${esc(c.name)}</div>
+      <div class="profile-phone">${esc(c.phone) || ''}</div>
+      ${(c.tags && c.tags.length) ? '<div class="profile-tags">' + c.tags.map(t => `<span class="tag${t==='VIP'?' vip':''}">${esc(t)}</span>`).join('') + '</div>' : ''}
+      <div class="profile-actions">
+        <button class="btn btn-sm btn-secondary" onclick="openClientModal('${esc(id)}')">✏️ Редактировать</button>
+        <button class="btn btn-sm btn-primary" onclick="openVisitModal('${esc(id)}')">+ Визит</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteClient('${esc(id)}')">🗑</button>
+      </div>
+    </div>
+  `;
+
+  if (c.birthday || c.notes) {
+    html += '<div class="card">';
+    if (c.birthday) {
+      html += `<div class="info-row"><span class="info-label">День рождения</span><span class="info-value">${formatDateShort(c.birthday)}</span></div>`;
+    }
+    if (c.notes) {
+      html += `<div class="info-row"><span class="info-label">Заметки</span><span class="info-value">${esc(c.notes)}</span></div>`;
+    }
+    html += '</div>';
+  }
+
+  // Client formulas
+  const cFormulas = c.formulas || [];
+  html += '<div class="flex-between mb-12 mt-12"><div class="section-title" style="margin:0">Формулы клиента</div><span style="font-size:13px;color:var(--text-muted);font-weight:600">' + cFormulas.length + '</span></div>';
+  if (cFormulas.length === 0) {
+    html += '<div class="empty"><div class="empty-icon">🧪</div><div class="empty-text">Нет формул. Нажмите «Редактировать» чтобы добавить.</div></div>';
+  } else {
+    html += cFormulas.map(cf => {
+      let cfHtml = '<div class="card">';
+      cfHtml += '<div class="card-title">' + esc(cf.name || 'Без названия') + '</div>';
+      if (cf.technique) cfHtml += '<div style="margin-bottom:6px"><span class="tag">' + esc(cf.technique) + '</span></div>';
+      if (cf.formula) {
+        if (cf.formula.root && (cf.formula.root.colors.length || cf.formula.root.developer)) {
+          cfHtml += '<div style="font-size:12px;margin-bottom:4px"><strong style="color:var(--accent-dark)">Корень:</strong> ' +
+            cf.formula.root.colors.map(c => (esc(c.brand) ? esc(c.brand) + ' ' : '') + esc(c.colorNum || '') + (c.amount ? ' — ' + esc(c.amount) : '')).join(', ') +
+            (cf.formula.root.developer ? ' <span style="color:var(--text-muted)">| Активатор: ' + esc(cf.formula.root.developer) + '</span>' : '') + '</div>';
+        }
+        if (cf.formula.length && (cf.formula.length.colors.length || cf.formula.length.developer)) {
+          cfHtml += '<div style="font-size:12px;margin-bottom:4px"><strong style="color:var(--accent-dark)">Длина:</strong> ' +
+            cf.formula.length.colors.map(c => (esc(c.brand) ? esc(c.brand) + ' ' : '') + esc(c.colorNum || '') + (c.amount ? ' — ' + esc(c.amount) : '')).join(', ') +
+            (cf.formula.length.developer ? ' <span style="color:var(--text-muted)">| Активатор: ' + esc(cf.formula.length.developer) + '</span>' : '') + '</div>';
+        }
+      }
+      if (cf.notes) cfHtml += '<div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-top:4px">' + esc(cf.notes) + '</div>';
+      cfHtml += '</div>';
+      return cfHtml;
+    }).join('');
+  }
+
+  html += '<div class="flex-between mb-12 mt-12"><div class="section-title" style="margin:0">История визитов</div><span style="font-size:13px;color:var(--text-muted);font-weight:600">' + cv.length + ' визит' + pluralVisit(cv.length) + '</span></div>';
+
+  if (cv.length === 0) {
+    html += '<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">Нет визитов</div></div>';
+  } else {
+    html += cv.map(v => {
+      let fHtml = '';
+      const fm = v.formula;
+      if (fm && (fm.root && (fm.root.colors.length || fm.root.developer) || fm.length && (fm.length.colors.length || fm.length.developer))) {
+        fHtml = '<div class="visit-formula">';
+        if (fm.root && (fm.root.colors.length || fm.root.developer)) {
+          fHtml += '<div class="visit-formula-title">Корень:</div>' +
+            fm.root.colors.map(c => `${esc(c.brand || '')} ${esc(c.colorNum || '')} ${c.amount ? '— ' + esc(c.amount) : ''}`).join('<br>') +
+            (fm.root.developer ? '<br><span style="color:var(--text-muted)">Активатор: ' + esc(fm.root.developer) + '</span>' : '');
+        }
+        if (fm.length && (fm.length.colors.length || fm.length.developer)) {
+          fHtml += '<div class="visit-formula-title" style="margin-top:6px">Длина:</div>' +
+            fm.length.colors.map(c => `${esc(c.brand || '')} ${esc(c.colorNum || '')} ${c.amount ? '— ' + esc(c.amount) : ''}`).join('<br>') +
+            (fm.length.developer ? '<br><span style="color:var(--text-muted)">Активатор: ' + esc(fm.length.developer) + '</span>' : '');
+        }
+        if (v.technique) fHtml += '<br><span style="color:var(--text-muted)">Техника: ' + esc(v.technique) + '</span>';
+        fHtml += '</div>';
+      }
+      // Legacy support for old formulas array format
+      if (!fHtml && v.formulas && v.formulas.length) {
+        fHtml = '<div class="visit-formula"><div class="visit-formula-title">Формула:</div>' +
+          v.formulas.map(f => `${esc(f.brand || '')} ${esc(f.color || '')} ${f.ratio ? '(' + esc(f.ratio) + ')' : ''} ${f.developer ? ', окс. ' + esc(f.developer) : ''}`).join('<br>') +
+          '</div>';
+      }
+      return `<div class="visit-card">
+        <div class="flex-between">
+          <div class="visit-date">${formatDate(v.date)}</div>
+          <button class="btn-delete-sm" onclick="deleteVisit('${esc(v.id)}','${esc(id)}')" aria-label="Удалить визит">🗑</button>
+        </div>
+        <div class="visit-services">${(v.services||[]).map(s => esc(s)).join(', ') || '—'}</div>
+        ${fHtml}
+        ${v.notes ? '<div class="visit-notes">' + esc(v.notes) + '</div>' : ''}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+          ${v.price ? '<div class="visit-price">' + formatPrice(v.price) + '</div>' : '<div></div>'}
+          ${v.duration ? '<div style="font-size:12px;color:var(--text-muted)">⏱ ' + esc(v.duration) + ' мин</div>' : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('profileContent').innerHTML = html;
+  showScreen('profile');
+}
+
+function deleteClient(id) {
+  if (!confirm('Удалить клиента и все визиты?')) return;
+  clients = clients.filter(c => c.id !== id);
+  visits = visits.filter(v => v.clientId !== id);
+  appointments = appointments.filter(a => a.clientId !== id);
+  // Clean up orphaned formula repo entries (M1)
+  formulaRepo = formulaRepo.filter(f => f.clientId !== id);
+  persist();
+  showScreen('clients');
+}
+
+function deleteVisit(vid, cid) {
+  if (!confirm('Удалить визит?')) return;
+  visits = visits.filter(v => v.id !== vid);
+  // Clean up orphaned formula repo entries (M1)
+  formulaRepo = formulaRepo.filter(f => f.visitId !== vid);
+  persist();
+  openProfile(cid);
+}
+
+// ═══════════════════════════════════════════════════
+// CLIENT MODAL
+// ═══════════════════════════════════════════════════
+
+let editingClientId = null;
+
+let clientFormulaCount = 0;
+
+function openClientModal(id) {
+  editingClientId = id || null;
+  const c = id ? clients.find(cl => cl.id === id) : null;
+  document.getElementById('modalClientTitle').textContent = c ? 'Редактировать клиента' : 'Новый клиент';
+  document.getElementById('cName').value = c ? c.name : '';
+  document.getElementById('cPhone').value = c ? (c.phone || '') : '';
+  document.getElementById('cBirthday').value = c ? (c.birthday || '') : '';
+  document.getElementById('cNotes').value = c ? (c.notes || '') : '';
+  renderTagSelector('cTagsContainer', c ? (c.tags || []) : []);
+
+  // Render client formulas
+  document.getElementById('cFormulasContainer').innerHTML = '';
+  clientFormulaCount = 0;
+  if (c && c.formulas && c.formulas.length) {
+    c.formulas.forEach(f => addClientFormulaBlock(f));
+  }
+  openModal('modalClient');
+}
+
+function addClientFormulaBlock(data) {
+  clientFormulaCount++;
+  const n = clientFormulaCount;
+  const blockId = 'cf-block-' + n;
+  const rootPfx = 'cf' + n + 'Root';
+  const lenPfx = 'cf' + n + 'Length';
+
+  const div = document.createElement('div');
+  div.id = blockId;
+  div.style.cssText = 'border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;background:var(--bg)';
+  // Store the original ID if editing (M4)
+  if (data && data.id) div.dataset.formulaId = data.id;
+  div.innerHTML = `
+    <div class="flex-between mb-8">
+      <input class="form-input" placeholder="Название: тёплый блонд, шатуш..." value="${esc(data ? (data.name || '') : '')}" style="font-size:13px;font-weight:600;border:none;padding:0;background:transparent" data-fname maxlength="200">
+      <button class="btn btn-sm btn-danger" onclick="document.getElementById('${blockId}').remove()" style="flex-shrink:0" aria-label="Удалить формулу">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="font-size:10px">ТЕХНИКА</label>
+      <select class="form-select" data-ftechnique style="font-size:13px;padding:8px 10px">
+        <option value="">— не выбрано —</option>
+        ${refs.techniques.map(t => `<option ${data && data.technique === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}
+      </select>
+    </div>
+    <div style="background:var(--warm-50);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:10px;margin-bottom:10px">
+      <div class="flex-between mb-8">
+        <label class="form-label" style="margin:0;font-size:11px;color:var(--accent-dark)">🎨 Корень — Краска</label>
+        <button class="btn btn-sm btn-secondary" onclick="addZoneRow('${rootPfx}')" style="font-size:11px;padding:4px 8px">+</button>
+      </div>
+      <div id="${rootPfx}Rows"></div>
+      <div class="form-group" style="margin-top:8px">
+        <label class="form-label" style="font-size:10px">АКТИВАТОР</label>
+        <input class="form-input" id="${rootPfx}Dev" placeholder="напр. 6%, 9%" value="${esc(data && data.formula && data.formula.root ? (data.formula.root.developer || '') : '')}" style="font-size:13px" maxlength="50">
+      </div>
+    </div>
+    <div style="background:var(--warm-50);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:10px;margin-bottom:10px">
+      <div class="flex-between mb-8">
+        <label class="form-label" style="margin:0;font-size:11px;color:var(--accent-dark)">✂️ Длина — Краска</label>
+        <button class="btn btn-sm btn-secondary" onclick="addZoneRow('${lenPfx}')" style="font-size:11px;padding:4px 8px">+</button>
+      </div>
+      <div id="${lenPfx}Rows"></div>
+      <div class="form-group" style="margin-top:8px">
+        <label class="form-label" style="font-size:10px">АКТИВАТОР</label>
+        <input class="form-input" id="${lenPfx}Dev" placeholder="напр. 6%, 9%" value="${esc(data && data.formula && data.formula.length ? (data.formula.length.developer || '') : '')}" style="font-size:13px" maxlength="50">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="font-size:10px">ЗАМЕТКИ</label>
+      <textarea class="form-textarea" data-fnotes placeholder="Время выдержки, уход..." style="font-size:13px;min-height:50px" maxlength="2000">${esc(data ? (data.notes || '') : '')}</textarea>
+    </div>
+  `;
+  document.getElementById('cFormulasContainer').appendChild(div);
+
+  // Init zone row counters
+  zoneRowCounters[rootPfx] = 0;
+  zoneRowCounters[lenPfx] = 0;
+
+  // Populate existing color rows or add default
+  if (data && data.formula && data.formula.root && data.formula.root.colors.length) {
+    data.formula.root.colors.forEach(c => addZoneRow(rootPfx, c));
+  } else {
+    addZoneRow(rootPfx);
+  }
+  if (data && data.formula && data.formula.length && data.formula.length.colors.length) {
+    data.formula.length.colors.forEach(c => addZoneRow(lenPfx, c));
+  } else {
+    addZoneRow(lenPfx);
+  }
+}
+
+function getClientFormulas() {
+  const blocks = document.querySelectorAll('#cFormulasContainer > div');
+  return [...blocks].map((block, i) => {
+    const n = block.id.replace('cf-block-', '');
+    const rootPfx = 'cf' + n + 'Root';
+    const lenPfx = 'cf' + n + 'Length';
+    return {
+      // Preserve existing ID if available (M4)
+      id: block.dataset.formulaId || genId(),
+      name: (block.querySelector('[data-fname]') || {}).value || '',
+      technique: (block.querySelector('[data-ftechnique]') || {}).value || '',
+      formula: getFormulaData(rootPfx, lenPfx),
+      notes: (block.querySelector('[data-fnotes]') || {}).value || ''
+    };
+  });
+}
+
+function renderTagSelector(containerId, selected) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = refs.tags.map(t => {
+    const active = selected.includes(t);
+    return `<span class="chip" style="cursor:pointer;${active ? '' : 'opacity:0.4;background:var(--border-light);color:var(--text-muted)'}" onclick="this.dataset.on=this.dataset.on==='1'?'0':'1';this.style.opacity=this.dataset.on==='1'?'1':'0.4';this.style.background=this.dataset.on==='1'?'var(--accent-soft)':'var(--border-light)';this.style.color=this.dataset.on==='1'?'var(--accent)':'var(--text-muted)'" data-tag="${esc(t)}" data-on="${active?'1':'0'}">${esc(t)}</span>`;
+  }).join('');
+}
+
+function getSelectedTags(containerId) {
+  return [...document.querySelectorAll('#' + containerId + ' .chip')].filter(c => c.dataset.on === '1').map(c => c.dataset.tag);
+}
+
+function saveClient() {
+  const name = document.getElementById('cName').value.trim();
+  if (!name) { alert('Введите имя клиента'); return; }
+  const data = {
+    name,
+    phone: document.getElementById('cPhone').value.trim(),
+    birthday: document.getElementById('cBirthday').value,
+    notes: document.getElementById('cNotes').value.trim(),
+    tags: getSelectedTags('cTagsContainer'),
+    formulas: getClientFormulas()
+  };
+
+  let clientId;
+  if (editingClientId) {
+    const idx = clients.findIndex(c => c.id === editingClientId);
+    if (idx >= 0) Object.assign(clients[idx], data);
+    clientId = editingClientId;
+  } else {
+    clientId = genId();
+    clients.push({ id: clientId, ...data });
+  }
+
+  // Sync client formulas to formula repository
+  // Remove old auto-synced client formulas
+  formulaRepo = formulaRepo.filter(f => !(f.auto && f.sourceType === 'client' && f.clientId === clientId));
+  // Add current ones
+  const cl = clients.find(c => c.id === clientId);
+  data.formulas.forEach(cf => {
+    if (hasFormulaData(cf.formula)) {
+      formulaRepo.push({
+        id: genId(),
+        name: cf.name || cl.name,
+        technique: cf.technique,
+        formula: cf.formula,
+        notes: cf.notes,
+        clientId: clientId,
+        clientName: cl.name,
+        visitId: '',
+        date: todayStr(),
+        auto: true,
+        sourceType: 'client'
+      });
+    }
+  });
+
+  persist();
+  closeModal('modalClient');
+  if (editingClientId && currentScreen === 'profile') openProfile(editingClientId);
+  else if (currentScreen === 'home') renderDashboard();
+  else renderClients();
+}
+
+// ═══════════════════════════════════════════════════
+// VISIT MODAL
+// ═══════════════════════════════════════════════════
+
+function openVisitModal(clientId) {
+  const sel = document.getElementById('vClient');
+  sel.innerHTML = clients.map(c => `<option value="${esc(c.id)}" ${c.id === clientId ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+  document.getElementById('vDate').value = todayStr();
+  document.getElementById('vDuration').value = '';
+  document.getElementById('vPrice').value = '';
+  document.getElementById('vNotes').value = '';
+  document.getElementById('vFormulaDesc').value = '';
+  document.getElementById('vRootRows').innerHTML = '';
+  document.getElementById('vLengthRows').innerHTML = '';
+  document.getElementById('vRootDev').value = '';
+  document.getElementById('vLengthDev').value = '';
+  zoneRowCounters['vRoot'] = 0;
+  zoneRowCounters['vLength'] = 0;
+  addZoneRow('vRoot');
+  addZoneRow('vLength');
+  renderServiceSelector('vServicesContainer', []);
+  renderTechniqueSelect('vTechnique');
+  openModal('modalVisit');
+}
+
+function renderServiceSelector(containerId, selected) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = refs.services.map(s => {
+    const active = selected.includes(s);
+    return `<span class="chip" style="cursor:pointer;${active ? '' : 'opacity:0.4;background:var(--border-light);color:var(--text-muted)'}" onclick="this.dataset.on=this.dataset.on==='1'?'0':'1';this.style.opacity=this.dataset.on==='1'?'1':'0.4';this.style.background=this.dataset.on==='1'?'var(--accent-soft)':'var(--border-light)';this.style.color=this.dataset.on==='1'?'var(--accent)':'var(--text-muted)'" data-svc="${esc(s)}" data-on="${active?'1':'0'}">${esc(s)}</span>`;
+  }).join('');
+}
+
+function getSelectedServices(containerId) {
+  return [...document.querySelectorAll('#' + containerId + ' .chip')].filter(c => c.dataset.on === '1').map(c => c.dataset.svc);
+}
+
+function renderTechniqueSelect(selId) {
+  const sel = document.getElementById(selId);
+  sel.innerHTML = '<option value="">— не выбрано —</option>' + refs.techniques.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+}
+
+let zoneRowCounters = {};
+
+function addZoneRow(prefix, data) {
+  if (!zoneRowCounters[prefix]) zoneRowCounters[prefix] = 0;
+  zoneRowCounters[prefix]++;
+  const n = zoneRowCounters[prefix];
+  const rowId = prefix + '-row-' + n;
+  const div = document.createElement('div');
+  div.className = 'formula-row';
+  div.id = rowId;
+  div.innerHTML = `
+    <div class="form-group">
+      <label class="form-label" style="font-size:10px">Бренд</label>
+      <select class="form-select form-input" style="font-size:13px;padding:8px 10px">
+        ${refs.brands.map(b => `<option ${data && data.brand === b ? 'selected' : ''}>${esc(b)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="font-size:10px">Номер краски</label>
+      <input class="form-input" placeholder="7.11" value="${esc(data ? (data.colorNum || '') : '')}" style="font-size:13px;padding:8px 10px" maxlength="50">
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="font-size:10px">Кол-во (мл)</label>
+      <input class="form-input" placeholder="20 мл" value="${esc(data ? (data.amount || '') : '')}" style="font-size:13px;padding:8px 10px" maxlength="50">
+    </div>
+    <button class="formula-remove" onclick="document.getElementById('${rowId}').remove()" aria-label="Удалить строку">✕</button>
+  `;
+  document.getElementById(prefix + 'Rows').appendChild(div);
+}
+
+// Fixed filter: only include rows that have actual color data (B3)
+function getZoneRows(prefix) {
+  const rows = document.querySelectorAll('#' + prefix + 'Rows .formula-row');
+  return [...rows].map(row => {
+    const inputs = row.querySelectorAll('input');
+    const select = row.querySelector('select');
+    return {
+      brand: select ? select.value : '',
+      colorNum: inputs[0] ? inputs[0].value.trim() : '',
+      amount: inputs[1] ? inputs[1].value.trim() : ''
+    };
+  }).filter(f => f.colorNum || f.amount);
+}
+
+function getFormulaData(rootPrefix, lengthPrefix) {
+  return {
+    root: {
+      colors: getZoneRows(rootPrefix),
+      developer: document.getElementById(rootPrefix + 'Dev').value.trim()
+    },
+    length: {
+      colors: getZoneRows(lengthPrefix),
+      developer: document.getElementById(lengthPrefix + 'Dev').value.trim()
+    }
+  };
+}
+
+function hasFormulaData(fd) {
+  return (fd.root.colors.length > 0 || fd.root.developer) || (fd.length.colors.length > 0 || fd.length.developer);
+}
+
+function saveVisit() {
+  const clientId = document.getElementById('vClient').value;
+  if (!clientId) { alert('Выберите клиента'); return; }
+  const formulaDesc = document.getElementById('vFormulaDesc').value.trim();
+  const formula = getFormulaData('vRoot', 'vLength');
+  const technique = document.getElementById('vTechnique').value;
+  const visit = {
+    id: genId(),
+    clientId,
+    date: document.getElementById('vDate').value || todayStr(),
+    services: getSelectedServices('vServicesContainer'),
+    duration: document.getElementById('vDuration').value,
+    price: document.getElementById('vPrice').value,
+    formula,
+    formulaDesc,
+    technique,
+    notes: document.getElementById('vNotes').value.trim()
+  };
+  visits.push(visit);
+
+  // Auto-add to formula repository if there is formula data
+  if (hasFormulaData(formula)) {
+    const client = clients.find(c => c.id === clientId);
+    const clientName = client ? client.name : '';
+    formulaRepo.push({
+      id: genId(),
+      name: formulaDesc || (clientName + ' — ' + visit.date),
+      technique,
+      formula,
+      notes: '',
+      clientId,
+      clientName: clientName,
+      visitId: visit.id,
+      date: visit.date,
+      auto: true
+    });
+  }
+
+  persist();
+  closeModal('modalVisit');
+  if (currentScreen === 'profile') openProfile(clientId);
+  else renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════
+// APPOINTMENT MODAL
+// ═══════════════════════════════════════════════════
+
+function openAptModal(date) {
+  const sel = document.getElementById('aClient');
+  sel.innerHTML = clients.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  document.getElementById('aDate').value = date || todayStr();
+  document.getElementById('aTime').value = '';
+  document.getElementById('aPrice').value = '';
+  document.getElementById('aNotes').value = '';
+  renderServiceSelector('aServicesContainer', []);
+  openModal('modalApt');
+}
+
+function saveAppointment() {
+  const clientId = document.getElementById('aClient').value;
+  if (!clientId) { alert('Выберите клиента'); return; }
+  appointments.push({
+    id: genId(),
+    clientId,
+    date: document.getElementById('aDate').value || todayStr(),
+    time: document.getElementById('aTime').value,
+    services: getSelectedServices('aServicesContainer'),
+    price: document.getElementById('aPrice').value,
+    notes: document.getElementById('aNotes').value.trim()
+  });
+  persist();
+  closeModal('modalApt');
+  if (currentScreen === 'calendar') renderCalendar();
+  else renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════════
+
+let calDate = new Date();
+let calSelected = todayStr();
+
+function renderCalendar() {
+  const y = calDate.getFullYear(), m = calDate.getMonth();
+  document.getElementById('calMonth').textContent = MONTHS_RU_NOM[m] + ' ' + y;
+
+  const first = new Date(y, m, 1);
+  let startDay = first.getDay() - 1; if (startDay < 0) startDay = 6;
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+
+  const today = todayStr();
+
+  // Group appointments by date for inline display
+  const aptsByDate = {};
+  appointments.forEach(a => {
+    if (!aptsByDate[a.date]) aptsByDate[a.date] = [];
+    aptsByDate[a.date].push(a);
+  });
+  // Sort each day's appointments by time
+  Object.values(aptsByDate).forEach(arr => arr.sort((a,b) => (a.time||'').localeCompare(b.time||'')));
+
+  let html = DAYS_RU.map(d => `<div class="cal-header">${d}</div>`).join('');
+
+  // Previous month days
+  for (let i = 0; i < startDay; i++) {
+    const prevDate = new Date(y, m - 1, prevDays - startDay + 1 + i);
+    const ds = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0') + '-' + String(prevDate.getDate()).padStart(2,'0');
+    html += `<div class="cal-day other-month" onclick="navigateToDate('${ds}')" role="button" tabindex="0"><div class="cal-day-num">${prevDays - startDay + 1 + i}</div></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cls = [
+      'cal-day',
+      ds === today ? 'today' : '',
+      ds === calSelected ? 'selected' : ''
+    ].filter(Boolean).join(' ');
+
+    const dayApts = aptsByDate[ds] || [];
+    let aptsHtml = '';
+    const maxShow = 2;
+    dayApts.slice(0, maxShow).forEach(a => {
+      const cl = clients.find(c => c.id === a.clientId);
+      const label = (a.time ? a.time.slice(0,5) + ' ' : '') + (cl ? cl.name.split(' ')[0] : '?');
+      aptsHtml += `<div class="cal-apt-chip">${esc(label)}</div>`;
+    });
+    if (dayApts.length > maxShow) {
+      aptsHtml += `<div class="cal-apt-more">+${dayApts.length - maxShow}</div>`;
+    }
+
+    html += `<div class="${cls}" onclick="selectCalDay('${ds}')" role="button" tabindex="0" aria-label="${d} ${MONTHS_RU_NOM[m]}"><div class="cal-day-num">${d}</div>${aptsHtml}</div>`;
+  }
+
+  const totalCells = startDay + daysInMonth;
+  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let i = 1; i <= remaining; i++) {
+    const nextDate = new Date(y, m + 1, i);
+    const ds = nextDate.getFullYear() + '-' + String(nextDate.getMonth()+1).padStart(2,'0') + '-' + String(nextDate.getDate()).padStart(2,'0');
+    html += `<div class="cal-day other-month" onclick="navigateToDate('${ds}')" role="button" tabindex="0"><div class="cal-day-num">${i}</div></div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+  renderCalApts();
+}
+
+function navigateToDate(ds) {
+  const d = parseLocalDate(ds);
+  calDate = new Date(d.getFullYear(), d.getMonth(), 1);
+  calSelected = ds;
+  renderCalendar();
+}
+
+function selectCalDay(ds) {
+  calSelected = ds;
+  renderCalendar();
+}
+
+function changeMonth(dir) {
+  calDate.setMonth(calDate.getMonth() + dir);
+  renderCalendar();
+}
+
+function renderCalApts() {
+  const dayApts = appointments.filter(a => a.date === calSelected).sort((a,b) => (a.time||'').localeCompare(b.time||''));
+  if (dayApts.length === 0) {
+    document.getElementById('calApts').innerHTML = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Нет записей</div></div>
+    <div style="text-align:center;margin-top:8px"><button class="btn btn-sm btn-primary" onclick="openAptModal('${calSelected}')">+ Новая запись</button></div>`;
+    return;
+  }
+  document.getElementById('calApts').innerHTML = dayApts.map(a => {
+    const cl = clients.find(c => c.id === a.clientId);
+    return `<div class="apt-item">
+      <div class="apt-time">${esc(a.time) || '—'}</div>
+      <div class="apt-info" onclick="openProfile('${esc(a.clientId)}')">
+        <div class="apt-client">${cl ? esc(cl.name) : 'Неизвестный'}</div>
+        <div class="apt-service">${(a.services||[]).map(s => esc(s)).join(', ') || ''}</div>
+        ${a.price ? '<div style="font-size:12px;font-weight:700;color:var(--green);margin-top:2px">' + formatPrice(a.price) + '</div>' : ''}
+      </div>
+      <button class="btn-delete-sm" onclick="deleteApt('${esc(a.id)}')" aria-label="Удалить запись" style="align-self:center">🗑</button>
+    </div>`;
+  }).join('') + `<div style="text-align:center;margin-top:8px"><button class="btn btn-sm btn-primary" onclick="openAptModal('${calSelected}')">+ Новая запись</button></div>`;
+}
+
+function deleteApt(id) {
+  if (!confirm('Удалить запись?')) return;
+  appointments = appointments.filter(a => a.id !== id);
+  persist();
+  renderCalendar();
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS — REFERENCE DATA EDITOR
+// ═══════════════════════════════════════════════════
+
+let currentRefKey = null;
+const REF_TITLES = { services: 'Услуги', brands: 'Бренды красок', techniques: 'Техники', tags: 'Метки клиентов' };
+
+function openRefEditor(key) {
+  currentRefKey = key;
+  document.getElementById('refTitle').textContent = REF_TITLES[key] || 'Редактирование';
+  renderRefChips();
+  document.getElementById('refNewItem').value = '';
+  openModal('modalRef');
+}
+
+function renderRefChips() {
+  document.getElementById('refChips').innerHTML = refs[currentRefKey].map((item, i) =>
+    `<span class="chip">${esc(item)}<button class="chip-remove" onclick="removeRefItem(${i})" aria-label="Удалить ${esc(item)}">✕</button></span>`
+  ).join('');
+}
+
+// Duplicate check added (L2)
+function addRefItem() {
+  const input = document.getElementById('refNewItem');
+  const val = input.value.trim();
+  if (!val) return;
+  if (refs[currentRefKey].some(item => item.toLowerCase() === val.toLowerCase())) {
+    alert('Этот элемент уже существует');
+    return;
+  }
+  refs[currentRefKey].push(val);
+  persist();
+  renderRefChips();
+  input.value = '';
+  input.focus();
+}
+
+function removeRefItem(i) {
+  refs[currentRefKey].splice(i, 1);
+  persist();
+  renderRefChips();
+}
+
+// ═══════════════════════════════════════════════════
+// FORMULA REPOSITORY
+// ═══════════════════════════════════════════════════
+
+function formulaSummaryText(f) {
+  const fm = f.formula;
+  if (!fm) {
+    // Legacy support
+    if (f.formulas && f.formulas.length) return f.formulas.map(r => `${r.brand || ''} ${r.color || ''}`).join(', ');
+    return '—';
+  }
+  const parts = [];
+  if (fm.root && fm.root.colors.length) parts.push('Корень: ' + fm.root.colors.map(c => c.colorNum || c.brand).join(', '));
+  if (fm.length && fm.length.colors.length) parts.push('Длина: ' + fm.length.colors.map(c => c.colorNum || c.brand).join(', '));
+  return parts.join(' · ') || '—';
+}
+
+function formulaSearchMatch(f, q) {
+  if ((f.name || '').toLowerCase().includes(q)) return true;
+  if ((f.technique || '').toLowerCase().includes(q)) return true;
+  if ((f.clientName || '').toLowerCase().includes(q)) return true;
+  if ((f.notes || '').toLowerCase().includes(q)) return true;
+  const fm = f.formula;
+  if (fm) {
+    const allColors = [...(fm.root ? fm.root.colors : []), ...(fm.length ? fm.length.colors : [])];
+    if (allColors.some(c => (c.brand || '').toLowerCase().includes(q) || (c.colorNum || '').toLowerCase().includes(q))) return true;
+    if (((fm.root && fm.root.developer) || '').toLowerCase().includes(q)) return true;
+    if (((fm.length && fm.length.developer) || '').toLowerCase().includes(q)) return true;
+  }
+  // Legacy
+  if ((f.formulas || []).some(r => (r.brand || '').toLowerCase().includes(q) || (r.color || '').toLowerCase().includes(q))) return true;
+  return false;
+}
+
+function renderFormulas() {
+  const q = (document.getElementById('formulaSearch').value || '').toLowerCase().trim();
+  let items = formulaRepo.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  if (q) {
+    items = items.filter(f => formulaSearchMatch(f, q));
+  }
+
+  if (items.length === 0) {
+    document.getElementById('formulaList').innerHTML = `<div class="empty"><div class="empty-icon">🧪</div><div class="empty-text">${formulaRepo.length === 0 ? 'Нет формул. Они появятся автоматически при добавлении визитов, или нажмите +' : 'Ничего не найдено'}</div></div>`;
+    return;
+  }
+
+  document.getElementById('formulaList').innerHTML = items.map(f => {
+    return `<div class="card" style="cursor:pointer" onclick="openFormulaDetail('${esc(f.id)}')">
+      <div class="flex-between">
+        <div class="card-title" style="margin:0">${esc(f.name || 'Без названия')}</div>
+        ${f.clientName ? '<span style="font-size:11px;color:var(--text-muted)">' + esc(f.clientName) + '</span>' : ''}
+      </div>
+      ${f.technique ? '<div style="margin-top:4px"><span class="tag">' + esc(f.technique) + '</span></div>' : ''}
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:6px">${esc(formulaSummaryText(f))}</div>
+      ${f.date ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">' + formatDate(f.date) + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderZoneDetail(zone, label) {
+  if (!zone || (!zone.colors.length && !zone.developer)) return '';
+  let html = '<div class="card" style="padding:12px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;font-size:12px;color:var(--accent-dark);margin-bottom:6px">' + label + '</div>';
+  if (zone.colors.length) {
+    html += '<table style="width:100%;font-size:13px;border-collapse:collapse">';
+    html += '<tr style="color:var(--text-muted);font-size:11px"><td style="padding:2px 4px">Бренд</td><td style="padding:2px 4px">Номер краски</td><td style="padding:2px 4px">Кол-во</td></tr>';
+    zone.colors.forEach(c => {
+      html += `<tr><td style="padding:3px 4px;font-weight:600">${esc(c.brand || '—')}</td><td style="padding:3px 4px;font-weight:600">${esc(c.colorNum || '—')}</td><td style="padding:3px 4px;font-weight:600">${esc(c.amount || '—')}</td></tr>`;
+    });
+    html += '</table>';
+  }
+  if (zone.developer) {
+    html += '<div style="margin-top:6px;font-size:12px;color:var(--text-secondary)">Активатор: <strong>' + esc(zone.developer) + '</strong></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function openFormulaDetail(id) {
+  const f = formulaRepo.find(x => x.id === id);
+  if (!f) return;
+
+  let html = `
+    <div class="card">
+      <div class="flex-between mb-12">
+        <div style="font-size:20px;font-weight:800">${esc(f.name || 'Без названия')}</div>
+        <button class="btn btn-sm btn-danger" onclick="deleteFormula('${esc(f.id)}')">🗑</button>
+      </div>
+      ${f.clientName ? '<div class="info-row"><span class="info-label">Клиент</span><span class="info-value" style="cursor:pointer;color:var(--accent)" onclick="openProfile(\'' + esc(f.clientId) + '\')">' + esc(f.clientName) + '</span></div>' : ''}
+      ${f.technique ? '<div class="info-row"><span class="info-label">Техника</span><span class="info-value">' + esc(f.technique) + '</span></div>' : ''}
+      ${f.date ? '<div class="info-row"><span class="info-label">Дата</span><span class="info-value">' + formatDate(f.date) + '</span></div>' : ''}
+    </div>
+  `;
+
+  if (f.formula) {
+    html += '<div class="section-title mt-12">Состав формулы</div>';
+    html += renderZoneDetail(f.formula.root, '🎨 Корень');
+    html += renderZoneDetail(f.formula.length, '✂️ Длина');
+    if (!renderZoneDetail(f.formula.root, '').trim() && !renderZoneDetail(f.formula.length, '').trim()) {
+      html += '<div class="empty"><div class="empty-icon">🧪</div><div class="empty-text">Нет данных</div></div>';
+    }
+  } else if (f.formulas && f.formulas.length) {
+    // Legacy
+    html += '<div class="section-title mt-12">Состав формулы</div>';
+    html += f.formulas.map(r => `<div class="card" style="padding:12px"><div style="font-size:13px">${esc(r.brand || '')} ${esc(r.color || '')} ${r.ratio ? '(' + esc(r.ratio) + ')' : ''} ${r.developer ? 'окс. ' + esc(r.developer) : ''}</div></div>`).join('');
+  }
+
+  if (f.notes) {
+    html += '<div class="section-title mt-12">Заметки</div><div class="card"><div style="font-size:13px">' + esc(f.notes) + '</div></div>';
+  }
+
+  document.getElementById('formulaDetailContent').innerHTML = html;
+  showScreen('formula-detail');
+}
+
+function deleteFormula(id) {
+  if (!confirm('Удалить формулу из репозитория?')) return;
+  formulaRepo = formulaRepo.filter(f => f.id !== id);
+  persist();
+  showScreen('formulas');
+}
+
+// Manual formula template modal
+let editingFormulaId = null;
+
+function openFormulaTemplateModal(id) {
+  editingFormulaId = id || null;
+  const f = id ? formulaRepo.find(x => x.id === id) : null;
+  document.getElementById('modalFormulaTitle').textContent = f ? 'Редактировать формулу' : 'Новая формула';
+  document.getElementById('ftName').value = f ? (f.name || '') : '';
+  document.getElementById('ftNotes').value = f ? (f.notes || '') : '';
+  renderTechniqueSelect('ftTechnique');
+  if (f && f.technique) document.getElementById('ftTechnique').value = f.technique;
+
+  // Reset zone rows
+  document.getElementById('ftRootRows').innerHTML = '';
+  document.getElementById('ftLengthRows').innerHTML = '';
+  document.getElementById('ftRootDev').value = '';
+  document.getElementById('ftLengthDev').value = '';
+  zoneRowCounters['ftRoot'] = 0;
+  zoneRowCounters['ftLength'] = 0;
+
+  if (f && f.formula) {
+    if (f.formula.root) {
+      (f.formula.root.colors || []).forEach(c => addZoneRow('ftRoot', c));
+      document.getElementById('ftRootDev').value = f.formula.root.developer || '';
+    }
+    if (f.formula.length) {
+      (f.formula.length.colors || []).forEach(c => addZoneRow('ftLength', c));
+      document.getElementById('ftLengthDev').value = f.formula.length.developer || '';
+    }
+  }
+  // Default one row per zone if empty
+  if (!document.querySelectorAll('#ftRootRows .formula-row').length) addZoneRow('ftRoot');
+  if (!document.querySelectorAll('#ftLengthRows .formula-row').length) addZoneRow('ftLength');
+
+  openModal('modalFormula');
+}
+
+function saveFormulaTemplate() {
+  const name = document.getElementById('ftName').value.trim();
+  if (!name) { alert('Введите название формулы'); return; }
+  const formula = getFormulaData('ftRoot', 'ftLength');
+  const data = {
+    name,
+    technique: document.getElementById('ftTechnique').value,
+    formula,
+    notes: document.getElementById('ftNotes').value.trim(),
+    clientId: '',
+    clientName: '',
+    visitId: '',
+    date: todayStr(),
+    auto: false
+  };
+  if (editingFormulaId) {
+    const idx = formulaRepo.findIndex(f => f.id === editingFormulaId);
+    if (idx >= 0) Object.assign(formulaRepo[idx], data);
+  } else {
+    formulaRepo.push({ id: genId(), ...data });
+  }
+  persist();
+  closeModal('modalFormula');
+  renderFormulas();
+}
+
+// ═══════════════════════════════════════════════════
+// GLOBAL SEARCH — now searches new formula format too (B1)
+// ═══════════════════════════════════════════════════
+
+function showSearch() { openModal('modalSearch'); document.getElementById('globalSearch').value = ''; document.getElementById('globalResults').innerHTML = ''; setTimeout(() => document.getElementById('globalSearch').focus(), 300); }
+
+function doGlobalSearch() {
+  const q = document.getElementById('globalSearch').value.toLowerCase().trim();
+  if (!q) { document.getElementById('globalResults').innerHTML = ''; return; }
+
+  let results = [];
+  clients.forEach(c => {
+    if (c.name.toLowerCase().includes(q) || (c.phone||'').includes(q) || (c.notes||'').toLowerCase().includes(q)) {
+      results.push(`<div class="client-item" onclick="closeModal('modalSearch');openProfile('${esc(c.id)}')">
+        <div class="client-avatar">${esc(c.name.charAt(0))}</div>
+        <div class="client-info"><div class="client-name">${esc(c.name)}</div><div class="client-meta">${esc(c.phone||'')}</div></div>
+      </div>`);
+    }
+  });
+  visits.forEach(v => {
+    // Search both legacy v.formulas AND new v.formula (B1)
+    let match = (v.formulas||[]).some(f => (f.brand||'').toLowerCase().includes(q) || (f.color||'').toLowerCase().includes(q)) ||
+      (v.notes||'').toLowerCase().includes(q) || (v.services||[]).some(s => s.toLowerCase().includes(q)) ||
+      (v.formulaDesc||'').toLowerCase().includes(q) || (v.technique||'').toLowerCase().includes(q);
+    // Search new formula structure
+    if (!match && v.formula) {
+      const fm = v.formula;
+      const allColors = [...(fm.root ? fm.root.colors : []), ...(fm.length ? fm.length.colors : [])];
+      match = allColors.some(c => (c.brand||'').toLowerCase().includes(q) || (c.colorNum||'').toLowerCase().includes(q)) ||
+        ((fm.root && fm.root.developer) || '').toLowerCase().includes(q) ||
+        ((fm.length && fm.length.developer) || '').toLowerCase().includes(q);
+    }
+    if (match) {
+      const cl = clients.find(c => c.id === v.clientId);
+      results.push(`<div class="client-item" onclick="closeModal('modalSearch');openProfile('${esc(v.clientId)}')">
+        <div class="client-avatar">📝</div>
+        <div class="client-info"><div class="client-name">${cl ? esc(cl.name) : 'Неизвестный'} — визит ${esc(v.date)}</div><div class="client-meta">${(v.services||[]).map(s => esc(s)).join(', ')}</div></div>
+      </div>`);
+    }
+  });
+
+  document.getElementById('globalResults').innerHTML = results.length ? results.join('') : '<div style="text-align:center;color:var(--text-muted);padding:20px">Ничего не найдено</div>';
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════════
+
+function exportData() {
+  try {
+    const data = { clients, visits, appointments, formulaRepo, refs, exportDate: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = 'salon_backup_' + todayStr() + '.json';
+    a.click();
+    // Revoke blob URL to prevent memory leak (L1)
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    alert('Ошибка экспорта: ' + e.message);
+  }
+}
+
+// Validated import with structure checks (M3, M7, S3)
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!confirm('Это заменит все текущие данные. Продолжить?')) return;
+      // Validate structure (M7)
+      if (data.clients && Array.isArray(data.clients)) clients = data.clients;
+      if (data.visits && Array.isArray(data.visits)) visits = data.visits;
+      if (data.appointments && Array.isArray(data.appointments)) appointments = data.appointments;
+      if (data.formulaRepo && Array.isArray(data.formulaRepo)) formulaRepo = data.formulaRepo;
+      // Only copy known ref keys (S3 — prototype pollution protection)
+      if (data.refs && typeof data.refs === 'object') {
+        ['services', 'brands', 'techniques', 'tags'].forEach(k => {
+          if (Array.isArray(data.refs[k])) refs[k] = data.refs[k];
+        });
+      }
+      persist();
+      alert('Данные успешно импортированы!');
+      showScreen('home');
+    } catch { alert('Ошибка чтения файла'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ═══════════════════════════════════════════════════
+// CSV IMPORT — improved parser with escaped quotes (M5)
+// ═══════════════════════════════════════════════════
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = parseCSVLine(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = parseCSVLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  });
+}
+
+function parseCSVLine(line) {
+  const vals = [];
+  let current = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        // Handle escaped quotes ""
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        vals.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  vals.push(current.trim());
+  return vals;
+}
+
+function importClientsCSV(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const rows = parseCSV(ev.target.result);
+      if (!rows.length) { alert('Файл пуст'); return; }
+      let added = 0;
+      rows.forEach(r => {
+        const name = r['Имя'];
+        if (!name) return;
+        // Skip if client with same name already exists
+        if (clients.find(c => c.name.toLowerCase() === name.toLowerCase())) return;
+        clients.push({
+          id: genId(),
+          name,
+          phone: r['Телефон'] || '',
+          birthday: r['День рождения (ГГГГ-ММ-ДД)'] || '',
+          notes: r['Заметки'] || '',
+          tags: (r['Метки (через ;)'] || '').split(';').map(t => t.trim()).filter(Boolean),
+          formulas: []
+        });
+        added++;
+      });
+      persist();
+      alert('Импортировано клиентов: ' + added);
+      showScreen('home');
+    } catch(err) { alert('Ошибка чтения CSV: ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function importFormulasCSV(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const rows = parseCSV(ev.target.result);
+      if (!rows.length) { alert('Файл пуст'); return; }
+      let added = 0;
+      rows.forEach(r => {
+        const clientName = r['Клиент'];
+        if (!clientName) return;
+        let client = clients.find(c => c.name.toLowerCase() === clientName.toLowerCase());
+        // Create client if not found
+        if (!client) {
+          client = { id: genId(), name: clientName, phone: '', birthday: '', notes: '', tags: [], formulas: [] };
+          clients.push(client);
+        }
+        if (!client.formulas) client.formulas = [];
+
+        function parseColors(str) {
+          if (!str) return [];
+          return str.split(';').map(s => s.trim()).filter(Boolean).map(s => {
+            const parts = s.split(':');
+            return { brand: '', colorNum: parts[0] || '', amount: parts[1] || '' };
+          });
+        }
+
+        const rootBrand = r['Корень — бренд'] || 'Davines';
+        const lengthBrand = r['Длина — бренд'] || rootBrand;
+        const rootColors = parseColors(r['Корень — номера красок (номер:мл через ;)']);
+        rootColors.forEach(c => c.brand = rootBrand);
+        const lengthColors = parseColors(r['Длина — номера красок (номер:мл через ;)']);
+        lengthColors.forEach(c => c.brand = lengthBrand);
+
+        const formula = {
+          id: genId(),
+          name: r['Название формулы'] || '',
+          technique: r['Техника'] || '',
+          formula: {
+            root: { colors: rootColors, developer: r['Корень — активатор'] || '' },
+            length: { colors: lengthColors, developer: r['Длина — активатор'] || '' }
+          },
+          notes: r['Заметки'] || ''
+        };
+        client.formulas.push(formula);
+
+        // Also add to formula repo
+        if (rootColors.length || lengthColors.length) {
+          formulaRepo.push({
+            id: genId(),
+            name: formula.name || client.name,
+            technique: formula.technique,
+            formula: formula.formula,
+            notes: formula.notes,
+            clientId: client.id,
+            clientName: client.name,
+            visitId: '',
+            date: todayStr(),
+            auto: true,
+            sourceType: 'client'
+          });
+        }
+        added++;
+      });
+      persist();
+      alert('Импортировано формул: ' + added);
+      showScreen('home');
+    } catch(err) { alert('Ошибка чтения CSV: ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════════════
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('active'); });
+});
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+
+// Set initial history state
+history.replaceState({ screen: 'home' }, '', '');
+
+// ═══════════════════════════════════════════════════
+// DEMO DATA — seed 10 clients with formulas, visits, appointments
+// ═══════════════════════════════════════════════════
+if (!loadData('demo_seeded', false)) {
+  // Clear any stale empty data from previous sessions
+  clients = []; visits = []; appointments = []; formulaRepo = [];
+  saveData('demo_seeded', true);
+  const demoClients = [
+    { name: 'Наталья Петрова', phone: '+382 67 123 456', birthday: '1985-03-15', tags: ['VIP','Постоянный клиент'], notes: 'Предпочитает тёплые оттенки. Аллергия на аммиак — использовать безаммиачные серии.',
+      formulas: [{
+        id: genId(), name: 'Тёплый шатен', technique: 'Растяжка цвета',
+        formula: { root: { colors: [{brand:'Davines',colorNum:'7.0',amount:'20 мл'},{brand:'Davines',colorNum:'7.11',amount:'20 мл'},{brand:'Davines',colorNum:'7.18',amount:'20 мл'}], developer:'6%' }, length: { colors: [{brand:'Davines',colorNum:'7.0',amount:'20 мл'},{brand:'Davines',colorNum:'7.11',amount:'30 мл'},{brand:'Davines',colorNum:'8.74',amount:'15 мл'}], developer:'6%' }},
+        notes: 'Выдержка 35 мин. Тонирование после.'
+      }]
+    },
+    { name: 'Ольга Ковалёва', phone: '+382 69 234 567', birthday: '1990-07-22', tags: ['VIP','Окрашивание'], notes: 'Блондинка, регулярное осветление каждые 6 недель.',
+      formulas: [{
+        id: genId(), name: 'Холодный блонд', technique: 'Тотал блонд',
+        formula: { root: { colors: [{brand:'Davines',colorNum:'10.00',amount:'25 мл'},{brand:'Davines',colorNum:'10.23',amount:'25 мл'}], developer:'9%' }, length: { colors: [{brand:'Davines',colorNum:'10.23',amount:'15 мл'}], developer: 'маска + finest pigment #7' }},
+        notes: 'Длина — только тонирование пигментом, не краской.'
+      }]
+    },
+    { name: 'Марина Джукич', phone: '+382 68 345 678', birthday: '1978-11-03', tags: ['Постоянный клиент'], notes: 'Седина 40%. Хочет полное покрытие.',
+      formulas: [{
+        id: genId(), name: 'Покрытие седины', technique: 'Мелирование',
+        formula: { root: { colors: [{brand:'Estel',colorNum:'6.0',amount:'30 мл'},{brand:'Estel',colorNum:'6.71',amount:'20 мл'}], developer:'6%' }, length: { colors: [{brand:'Estel',colorNum:'7.71',amount:'25 мл'}], developer:'3%' }},
+        notes: 'Наносить на сухие волосы. Выдержка 45 мин.'
+      }]
+    },
+    { name: 'Анна Вукович', phone: '+382 67 456 789', birthday: '1995-01-28', tags: ['Новый клиент','Окрашивание'], notes: 'Первый визит 2026-02. Хочет балаяж.',
+      formulas: [{
+        id: genId(), name: 'Карамельный балаяж', technique: 'Балаяж',
+        formula: { root: { colors: [{brand:'Wella',colorNum:'7.7',amount:'20 мл'},{brand:'Wella',colorNum:'7.73',amount:'15 мл'}], developer:'6%' }, length: { colors: [{brand:'Wella',colorNum:'9.3',amount:'20 мл'},{brand:'Wella',colorNum:'9.73',amount:'20 мл'}], developer:'9%' }},
+        notes: 'Открытая техника нанесения. Выдержка 40 мин.'
+      }]
+    },
+    { name: 'Елена Радович', phone: '+382 69 567 890', birthday: '1982-09-10', tags: ['VIP','Постоянный клиент'], notes: 'Тонкие волосы, использовать щадящие формулы.',
+      formulas: [{
+        id: genId(), name: 'Мягкий шатуш', technique: 'Шатуш',
+        formula: { root: { colors: [{brand:'Davines',colorNum:'5.0',amount:'20 мл'},{brand:'Davines',colorNum:'5.35',amount:'15 мл'}], developer:'6%' }, length: { colors: [{brand:'Davines',colorNum:'8.34',amount:'20 мл'},{brand:'Davines',colorNum:'9.3',amount:'10 мл'}], developer:'3%' }},
+        notes: 'Минимальное время выдержки — 25 мин. Обязательно маска после.'
+      }]
+    },
+    { name: 'Светлана Попович', phone: '+382 68 678 901', birthday: '1988-05-17', tags: ['Постоянный клиент'], notes: 'Рыжие волосы, хочет усилить медный оттенок.',
+      formulas: [{
+        id: genId(), name: 'Интенсивный медный', technique: 'Растяжка цвета',
+        formula: { root: { colors: [{brand:'Matrix',colorNum:'6.4',amount:'25 мл'},{brand:'Matrix',colorNum:'6.46',amount:'25 мл'}], developer:'6%' }, length: { colors: [{brand:'Matrix',colorNum:'7.44',amount:'30 мл'},{brand:'Matrix',colorNum:'8.4',amount:'15 мл'}], developer:'6%' }},
+        notes: 'Добавить бустер Red 5 мл в корень.'
+      }]
+    },
+    { name: 'Ирина Николич', phone: '+382 67 789 012', birthday: '1992-12-05', tags: ['Окрашивание','Рекомендация'], notes: 'Пришла по рекомендации Натальи. Хочет аиртач.',
+      formulas: [{
+        id: genId(), name: 'Платиновый аиртач', technique: 'Аиртач',
+        formula: { root: { colors: [{brand:'Schwarzkopf',colorNum:'12.1',amount:'30 мл'},{brand:'Schwarzkopf',colorNum:'12.19',amount:'15 мл'}], developer:'12%' }, length: { colors: [{brand:'Schwarzkopf',colorNum:'10.1',amount:'20 мл'}], developer:'3%' }},
+        notes: 'Осветление фольгой. Тонирование — отдельный шаг.'
+      }]
+    },
+    { name: 'Дарья Мартинович', phone: '+382 69 890 123', birthday: '1998-04-21', tags: ['Новый клиент'], notes: 'Натуральный цвет — тёмно-русый. Хочет контуринг.',
+      formulas: [{
+        id: genId(), name: 'Контуринг лица', technique: 'Контуринг',
+        formula: { root: { colors: [{brand:'L\'Oréal',colorNum:'6.0',amount:'20 мл'}], developer:'6%' }, length: { colors: [{brand:'L\'Oréal',colorNum:'8.1',amount:'15 мл'},{brand:'L\'Oréal',colorNum:'9.12',amount:'15 мл'}], developer:'6%' }},
+        notes: 'Светлые пряди вокруг лица. Зона затылка не трогать.'
+      }]
+    },
+    { name: 'Татьяна Лукич', phone: '+382 68 901 234', birthday: '1975-08-30', tags: ['VIP','Постоянный клиент','Окрашивание'], notes: 'Приходит каждые 4 недели. Корни + тонирование длины.',
+      formulas: [{
+        id: genId(), name: 'Классика — корень + длина', technique: 'Мелирование',
+        formula: { root: { colors: [{brand:'Davines',colorNum:'5.0',amount:'30 мл'},{brand:'Davines',colorNum:'5.4',amount:'10 мл'}], developer:'6%' }, length: { colors: [{brand:'Davines',colorNum:'6.34',amount:'20 мл'},{brand:'Davines',colorNum:'7.34',amount:'20 мл'}], developer:'3%' }},
+        notes: 'Корни — 35 мин, длина — 15 мин. Финальная маска OI.'
+      }]
+    },
+    { name: 'Милица Обрадович', phone: '+382 67 012 345', birthday: '2000-02-14', tags: ['Новый клиент','Рекомендация'], notes: 'Хочет омбре, натуральный переход. Без резких линий.',
+      formulas: [{
+        id: genId(), name: 'Натуральное омбре', technique: 'Омбре',
+        formula: { root: { colors: [{brand:'Davines',colorNum:'4.0',amount:'20 мл'},{brand:'Davines',colorNum:'4.77',amount:'15 мл'}], developer:'6%' }, length: { colors: [{brand:'Davines',colorNum:'8.0',amount:'20 мл'},{brand:'Davines',colorNum:'8.34',amount:'15 мл'},{brand:'Davines',colorNum:'9.3',amount:'10 мл'}], developer:'9%' }},
+        notes: 'Нанесение от середины длины. Растяжка кистью. Выдержка 40 мин.'
+      }]
+    }
+  ];
+
+  const today = todayStr();
+  const now = new Date();
+
+  demoClients.forEach(dc => {
+    const clientId = genId();
+    const client = { id: clientId, name: dc.name, phone: dc.phone, birthday: dc.birthday, notes: dc.notes, tags: dc.tags, formulas: dc.formulas };
+    clients.push(client);
+
+    // Add 1–3 past visits per client
+    const visitCount = 1 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < visitCount; i++) {
+      const daysAgo = 7 + Math.floor(Math.random() * 90);
+      const vDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo);
+      const vDateStr = vDate.getFullYear() + '-' + String(vDate.getMonth()+1).padStart(2,'0') + '-' + String(vDate.getDate()).padStart(2,'0');
+      const services = ['Окрашивание'];
+      if (Math.random() > 0.5) services.push('Стрижка');
+      if (Math.random() > 0.7) services.push('Укладка');
+      const price = String(30 + Math.floor(Math.random() * 8) * 10);
+      const cf = dc.formulas[0];
+      const visitId = genId();
+      visits.push({
+        id: visitId, clientId, date: vDateStr, services, duration: String(60 + Math.floor(Math.random() * 4) * 30),
+        price, formula: cf.formula, formulaDesc: cf.name, technique: cf.technique, notes: ''
+      });
+
+      // Add to formula repo from visit
+      formulaRepo.push({
+        id: genId(), name: cf.name, technique: cf.technique, formula: cf.formula, notes: cf.notes,
+        clientId, clientName: dc.name, visitId, date: vDateStr, auto: true
+      });
+    }
+
+    // Add formula repo entry from client formula
+    formulaRepo.push({
+      id: genId(), name: dc.formulas[0].name, technique: dc.formulas[0].technique,
+      formula: dc.formulas[0].formula, notes: dc.formulas[0].notes,
+      clientId, clientName: dc.name, visitId: '', date: today, auto: true, sourceType: 'client'
+    });
+  });
+
+  // Add a few upcoming appointments (today + next few days)
+  const aptClients = [0, 2, 4, 7, 1, 8];
+  const aptTimes = ['09:00','10:30','12:00','14:00','15:30','17:00'];
+  const aptServices = [['Окрашивание','Стрижка'],['Окрашивание'],['Мелирование','Укладка'],['Окрашивание'],['Тонирование','Стрижка'],['Окрашивание','Укладка']];
+  aptClients.forEach((ci, i) => {
+    const daysAhead = Math.floor(i / 2);
+    const aDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysAhead);
+    const aDateStr = aDate.getFullYear() + '-' + String(aDate.getMonth()+1).padStart(2,'0') + '-' + String(aDate.getDate()).padStart(2,'0');
+    appointments.push({
+      id: genId(), clientId: clients[ci].id, date: aDateStr,
+      time: aptTimes[i], services: aptServices[i],
+      price: String(40 + Math.floor(Math.random() * 6) * 10), notes: ''
+    });
+  });
+
+  persist();
+}
+
+renderDashboard();
+
+// Service worker with error handling (L5)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed:', err));
+}
+</script>
+</body>
+</html>

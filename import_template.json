@@ -1,0 +1,154 @@
+{
+  "clients": [
+    {
+      "id": "client1",
+      "name": "Наталья",
+      "phone": "+382 67 123 456",
+      "birthday": "1985-06-15",
+      "notes": "Предпочитает тёплые оттенки",
+      "tags": ["Постоянный клиент", "Окрашивание"],
+      "formulas": [
+        {
+          "id": "cf1",
+          "name": "Тёплый блонд",
+          "technique": "Балаяж",
+          "formula": {
+            "root": {
+              "colors": [
+                { "brand": "Davines", "colorNum": "7.0", "amount": "20" },
+                { "brand": "Davines", "colorNum": "7.11", "amount": "20" },
+                { "brand": "Davines", "colorNum": "7.18", "amount": "20" }
+              ],
+              "developer": "6%"
+            },
+            "length": {
+              "colors": [
+                { "brand": "Davines", "colorNum": "7.0", "amount": "20" },
+                { "brand": "Davines", "colorNum": "7.11", "amount": "30" },
+                { "brand": "Davines", "colorNum": "8.74", "amount": "15" }
+              ],
+              "developer": "6%"
+            }
+          },
+          "notes": "Время выдержки 35 мин"
+        }
+      ]
+    },
+    {
+      "id": "client2",
+      "name": "Ольга",
+      "phone": "+382 68 234 567",
+      "birthday": "1990-03-22",
+      "notes": "",
+      "tags": ["VIP"],
+      "formulas": [
+        {
+          "id": "cf2",
+          "name": "Сливочный блонд",
+          "technique": "Тотал блонд",
+          "formula": {
+            "root": {
+              "colors": [
+                { "brand": "Davines", "colorNum": "10.00", "amount": "25" },
+                { "brand": "Davines", "colorNum": "10.23", "amount": "25" }
+              ],
+              "developer": "9%"
+            },
+            "length": {
+              "colors": [],
+              "developer": ""
+            }
+          },
+          "notes": "Длина — маска + finest pigment #7"
+        }
+      ]
+    },
+    {
+      "id": "client3",
+      "name": "Рада",
+      "phone": "+382 69 345 678",
+      "birthday": "",
+      "notes": "Уход: маска + прямой пигмент розовый",
+      "tags": ["Окрашивание"],
+      "formulas": []
+    }
+  ],
+  "visits": [
+    {
+      "id": "visit1",
+      "clientId": "client1",
+      "date": "2026-03-20",
+      "services": ["Окрашивание", "Укладка"],
+      "duration": "120",
+      "price": "80",
+      "formula": {
+        "root": {
+          "colors": [
+            { "brand": "Davines", "colorNum": "7.0", "amount": "20" },
+            { "brand": "Davines", "colorNum": "7.11", "amount": "20" }
+          ],
+          "developer": "6%"
+        },
+        "length": {
+          "colors": [
+            { "brand": "Davines", "colorNum": "8.74", "amount": "15" }
+          ],
+          "developer": "6%"
+        }
+      },
+      "formulaDesc": "Тёплый блонд",
+      "technique": "Балаяж",
+      "notes": ""
+    }
+  ],
+  "appointments": [
+    {
+      "id": "apt1",
+      "clientId": "client1",
+      "date": "2026-04-01",
+      "time": "10:00",
+      "services": ["Окрашивание"],
+      "price": "80",
+      "notes": ""
+    }
+  ],
+  "formulaRepo": [
+    {
+      "id": "fr1",
+      "name": "Тёплый блонд",
+      "technique": "Балаяж",
+      "formula": {
+        "root": {
+          "colors": [
+            { "brand": "Davines", "colorNum": "7.0", "amount": "20" },
+            { "brand": "Davines", "colorNum": "7.11", "amount": "20" },
+            { "brand": "Davines", "colorNum": "7.18", "amount": "20" }
+          ],
+          "developer": "6%"
+        },
+        "length": {
+          "colors": [
+            { "brand": "Davines", "colorNum": "7.0", "amount": "20" },
+            { "brand": "Davines", "colorNum": "7.11", "amount": "30" },
+            { "brand": "Davines", "colorNum": "8.74", "amount": "15" }
+          ],
+          "developer": "6%"
+        }
+      },
+      "notes": "Время выдержки 35 мин",
+      "clientId": "client1",
+      "clientName": "Наталья",
+      "visitId": "",
+      "date": "2026-03-20",
+      "auto": false,
+      "sourceType": ""
+    }
+  ],
+  "refs": {
+    "services": ["Стрижка", "Окрашивание", "Укладка", "Мелирование", "Кератин", "Тонирование", "Ботокс", "Ламинирование", "Наращивание", "Химическая завивка"],
+    "brands": ["Davines", "Estel", "Wella", "L'Oréal", "Ollin", "Kapous", "Matrix", "Schwarzkopf", "Londa", "Indola"],
+    "techniques": ["Аиртач", "Шатуш", "Балаяж", "Мелирование", "Омбре", "Сомбре", "Тотал блонд", "Растяжка цвета", "Контуринг"],
+    "tags": ["VIP", "Постоянный клиент", "Окрашивание", "Новый клиент", "Рекомендация"]
+  },
+  "exportDate": "2026-03-25T00:00:00.000Z"
+}
