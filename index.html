@@ -505,6 +505,24 @@ html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font
   </div>
   <input type="file" id="importClientsCSV" accept=".csv" style="display:none" onchange="importClientsCSV(event)">
   <input type="file" id="importFormulasCSV" accept=".csv" style="display:none" onchange="importFormulasCSV(event)">
+
+  <div class="section-title mt-12">Шаблоны CSV</div>
+  <div class="settings-item" onclick="downloadTemplate('clients')">
+    <div class="settings-icon" style="background:var(--accent-soft);color:var(--accent-dark)">📋</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Шаблон клиентов</div>
+      <div class="settings-item-desc">Скачать пример CSV для импорта клиентов</div>
+    </div>
+    <span class="settings-arrow">↓</span>
+  </div>
+  <div class="settings-item" onclick="downloadTemplate('formulas')">
+    <div class="settings-icon" style="background:var(--purple-soft);color:var(--purple)">📋</div>
+    <div class="settings-item-text">
+      <div class="settings-item-title">Шаблон формул</div>
+      <div class="settings-item-desc">Скачать пример CSV для импорта формул</div>
+    </div>
+    <span class="settings-arrow">↓</span>
+  </div>
 </div>
 
 <!-- Formulas Repository -->
@@ -2463,6 +2481,13 @@ function doGlobalSearch() {
 // ═══════════════════════════════════════════════════
 // EXPORT / IMPORT
 // ═══════════════════════════════════════════════════
+
+function downloadTemplate(type) {
+  const a = document.createElement('a');
+  a.href = type === 'clients' ? 'template_clients.csv' : 'template_formulas.csv';
+  a.download = type === 'clients' ? 'template_clients.csv' : 'template_formulas.csv';
+  a.click();
+}
 
 function exportData() {
   try {
