@@ -375,6 +375,8 @@ html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font
     <span class="settings-arrow">›</span>
   </div>
 
+  <div id="backupReminder"></div>
+
   <div class="flex-between mb-12">
     <div class="section-title" style="margin:0">Сегодня</div>
     <span style="font-size:13px;color:var(--text-muted);font-weight:600" id="todayDate"></span>
@@ -943,6 +945,24 @@ function persist() {
   saveData('ref_brands', refs.brands);
   saveData('ref_techniques', refs.techniques);
   saveData('ref_tags', refs.tags);
+  autoBackup();
+}
+
+// Rolling auto-backup in localStorage (keeps last 3 snapshots)
+function autoBackup() {
+  try {
+    const snapshot = JSON.stringify({ clients, visits, appointments, formulaRepo, refs, ts: new Date().toISOString() });
+    const backups = JSON.parse(localStorage.getItem('salon_backups') || '[]');
+    // Only save if at least 1 hour since last backup to avoid thrashing
+    if (backups.length > 0) {
+      const lastTs = new Date(backups[backups.length - 1].ts);
+      if (Date.now() - lastTs.getTime() < 3600000) return;
+    }
+    backups.push({ ts: new Date().toISOString(), data: snapshot });
+    // Keep only last 3
+    while (backups.length > 3) backups.shift();
+    localStorage.setItem('salon_backups', JSON.stringify(backups));
+  } catch (e) { /* quota errors are OK — backup is best-effort */ }
 }
 
 // Use crypto for better IDs (L4)
@@ -1082,6 +1102,27 @@ function renderDashboard() {
     <div class="stat-card"><div class="stat-value" style="color:var(--green)">${actualRevenue > 0 ? formatPrice(actualRevenue) : '0 €'}</div><div class="stat-label">Факт за месяц ✓</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--blue)">${estimatedRevenue > 0 ? formatPrice(estimatedRevenue) : '0 €'}</div><div class="stat-label">План за месяц</div></div>
   `;
+
+  // Backup reminder — show if last export was >7 days ago
+  const lastExport = loadData('lastExport', null);
+  const daysSinceExport = lastExport ? Math.floor((Date.now() - new Date(lastExport).getTime()) / 86400000) : 999;
+  const backupEl = document.getElementById('backupReminder');
+  if (backupEl) {
+    if (daysSinceExport > 7 && clients.length > 0) {
+      backupEl.innerHTML = `<div class="card" style="border-color:var(--gold);background:var(--gold-soft);cursor:pointer" onclick="exportData();this.parentElement.innerHTML=''">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:24px">💾</span>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">Пора сделать бэкап!</div>
+            <div style="font-size:12px;color:var(--text-secondary)">${lastExport ? 'Последний: ' + formatDate(lastExport.slice(0,10)) : 'Вы ещё не сохраняли данные'}</div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:var(--gold)">Скачать</span>
+        </div>
+      </div>`;
+    } else {
+      backupEl.innerHTML = '';
+    }
+  }
 
   // Today appointments
   const todayApts = appointments.filter(a => a.date === today).sort((a,b) => (a.time||'').localeCompare(b.time||''));
@@ -2432,8 +2473,9 @@ function exportData() {
     a.href = url;
     a.download = 'salon_backup_' + todayStr() + '.json';
     a.click();
-    // Revoke blob URL to prevent memory leak (L1)
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    // Track last export date for backup reminder
+    saveData('lastExport', new Date().toISOString());
   } catch (e) {
     alert('Ошибка экспорта: ' + e.message);
   }
