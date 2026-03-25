@@ -1152,8 +1152,7 @@ function renderStats() {
     const dayVisits = visits.filter(v => v.date === ds);
     const dayApts = appointments.filter(a => a.date === ds);
     const dayRevenue = dayVisits.reduce((s, v) => s + (Number(v.price) || 0), 0);
-    const dayAptRevenue = dayApts.reduce((s, a) => s + (Number(a.price) || 0), 0);
-    const totalDayRevenue = dayRevenue + dayAptRevenue;
+    // Revenue = only completed visits, not appointment estimates
 
     days.push({
       date: ds,
@@ -1162,15 +1161,15 @@ function renderStats() {
       dateFormatted: d.getDate() + '.' + String(d.getMonth()+1).padStart(2,'0'),
       visits: dayVisits.length,
       appointments: dayApts.length,
-      revenue: totalDayRevenue,
+      revenue: dayRevenue,
       isToday: ds === today,
       isPast: ds < today
     });
 
-    weekRevenue += totalDayRevenue;
+    weekRevenue += dayRevenue;
     weekVisits += dayVisits.length;
     weekApts += dayApts.length;
-    if (totalDayRevenue > maxRevenue) maxRevenue = totalDayRevenue;
+    if (dayRevenue > maxRevenue) maxRevenue = dayRevenue;
   }
 
   // Also compute 4-week and monthly totals for comparison
