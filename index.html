@@ -768,9 +768,10 @@ html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; font
     <div id="aButtonsEdit" class="hidden">
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary btn-full" onclick="saveAppointment()" style="flex:1">Сохранить</button>
-        <button class="btn btn-full" onclick="completeAppointment()" style="flex:1;background:var(--green);color:#fff">✓ Завершить</button>
+        <button class="btn btn-full" onclick="completeAppointment()" id="aBtnComplete" style="flex:1;background:var(--green);color:#fff">✓ Завершить</button>
       </div>
       <button class="btn btn-sm btn-secondary" onclick="toggleFormulaSection()" id="aFormulaToggle" style="width:100%;margin-top:8px">+ Добавить формулу</button>
+      <button class="btn btn-sm btn-danger" onclick="uncompleteAppointment()" id="aBtnUncomplete" style="width:100%;margin-top:8px" class="hidden">Отменить завершение</button>
     </div>
   </div>
 </div>
@@ -1890,6 +1891,9 @@ function openAptModal(dateOrId, isEdit) {
 
     btnNew.classList.add('hidden');
     btnEdit.classList.remove('hidden');
+    // Show complete or uncomplete button based on status
+    document.getElementById('aBtnComplete').classList.toggle('hidden', !!apt.completed);
+    document.getElementById('aBtnUncomplete').classList.toggle('hidden', !apt.completed);
   } else {
     // Create mode
     document.getElementById('modalAptTitle').textContent = 'Новая запись';
@@ -2009,6 +2013,20 @@ function completeAppointment() {
   closeModal('modalApt');
   if (currentScreen === 'calendar') renderCalendar();
   else if (currentScreen === 'profile') openProfile(clientId);
+  else renderDashboard();
+}
+
+function uncompleteAppointment() {
+  if (!editingAptId) return;
+  const idx = appointments.findIndex(a => a.id === editingAptId);
+  if (idx >= 0) {
+    appointments[idx].completed = false;
+  }
+  // Remove auto-synced formula repo entry for this appointment
+  formulaRepo = formulaRepo.filter(f => f.visitId !== editingAptId);
+  persist();
+  closeModal('modalApt');
+  if (currentScreen === 'calendar') renderCalendar();
   else renderDashboard();
 }
 
