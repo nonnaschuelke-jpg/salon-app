@@ -1010,10 +1010,11 @@ function renderDashboard() {
   const d = new Date();
   document.getElementById('todayDate').textContent = d.getDate() + ' ' + MONTHS_RU[d.getMonth()];
 
-  // Stats — revenue from visits + past/today appointments
+  // Stats — revenue from visits + past/today appointments (skip if visit already exists for same client+date)
   const thisMonth = today.slice(0,7);
   const monthVisits = visits.filter(v => v.date && v.date.startsWith(thisMonth));
-  const monthAptsDone = appointments.filter(a => a.date && a.date.startsWith(thisMonth) && a.date <= today);
+  const monthAptsDone = appointments.filter(a => a.date && a.date.startsWith(thisMonth) && a.date <= today
+    && !visits.some(v => v.clientId === a.clientId && v.date === a.date));
   const revenue = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
     + monthAptsDone.reduce((s, a) => s + (Number(a.price) || 0), 0);
   document.getElementById('dashStats').innerHTML = `
@@ -1153,9 +1154,10 @@ function renderStats() {
     const ds = dateToStr(d);
     const dayVisits = visits.filter(v => v.date === ds);
     const dayApts = appointments.filter(a => a.date === ds);
-    // Revenue = visits + past/today appointments (not future estimates)
+    // Revenue = visits + past/today appointments (skip if visit exists for same client+date)
+    const dayAptsUnique = ds <= today ? dayApts.filter(a => !dayVisits.some(v => v.clientId === a.clientId)) : [];
     const dayRevenue = dayVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
-      + (ds <= today ? dayApts.reduce((s, a) => s + (Number(a.price) || 0), 0) : 0);
+      + dayAptsUnique.reduce((s, a) => s + (Number(a.price) || 0), 0);
 
     days.push({
       date: ds,
@@ -1175,10 +1177,11 @@ function renderStats() {
     if (dayRevenue > maxRevenue) maxRevenue = dayRevenue;
   }
 
-  // Also compute monthly totals for comparison
+  // Also compute monthly totals for comparison (same dedup logic)
   const monthStr = today.slice(0, 7);
   const monthVisits = visits.filter(v => v.date && v.date.startsWith(monthStr));
-  const monthAptsDone = appointments.filter(a => a.date && a.date.startsWith(monthStr) && a.date <= today);
+  const monthAptsDone = appointments.filter(a => a.date && a.date.startsWith(monthStr) && a.date <= today
+    && !visits.some(v => v.clientId === a.clientId && v.date === a.date));
   const monthRevenue = monthVisits.reduce((s, v) => s + (Number(v.price) || 0), 0)
     + monthAptsDone.reduce((s, a) => s + (Number(a.price) || 0), 0);
 
